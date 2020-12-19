@@ -1,0 +1,319 @@
+/* Button */
+.btn {
+    cursor: pointer;
+    background-color: #ff523b;
+    border: none;
+    border-radius: 5px;
+    color: #f4f4f4;
+    padding: 10px 20px;
+    margin: 30px 0;
+    display: inline-block;
+    transition: opacity 500ms;
+}
+
+
+.btn:hover {
+    opacity: 0.6;
+}
+
+.btn-dark {
+    background: #333;
+    color: #fff;
+}
+
+.box .s-btn {
+    background: #011c39;
+    padding: 6px 14px;
+    border-radius: 80px;
+    color: #f4f4f4;
+}
+
+
+
+/* Home */
+.row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+}
+
+.col-2 {
+    flex-basis: 50%;
+    min-width: 300px;
+    padding: 30px 0;
+}
+
+
+.col-2 img {
+    max-width: 100%;
+    padding: 50px 0;
+}
+
+
+.col-2 h1 {
+    font-size: 40px;
+    font-weight: 300;
+}
+
+.col-2 h2 {
+    margin-bottom: 10px;
+}
+
+.col-2 p {
+    margin: 20px 0;
+}
+
+/* featured */
+
+.section-padding {
+    padding: 20px 40px 40px;
+}
+
+.flex-grid .row {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 4px;
+}
+
+.flex-grid .column {
+    flex: 25%;
+    max-width: 500px;
+    padding: 0 4px;
+    padding-bottom: 40px;
+
+}
+
+.flex-grid img {
+    width: 100%;
+}
+
+.box {
+    max-width: 1080px;
+    margin: auto;
+    padding-left: 25px;
+    padding-right: 25px;
+    transition: 800ms;
+}
+
+/* TESTIMONIAL */
+.testimony {
+    padding-top: 30px;
+    background: linear-gradient(to right, #E9E4F0, #D3CCE3);
+}
+
+.testimony .row {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 4px;
+}
+
+.testimony .column {
+    flex: 25%;
+    max-width: 1280px;
+    padding: 30px 20px;
+    padding-bottom: 40px;
+    text-align: center;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: transform 500ms;
+}
+
+.testimony .column:hover {
+    transform: translateY(-20px);
+}
+
+.testimony img {
+    width: 400px;
+    border-radius: 15%;
+    height: 250px;
+}
+
+.testimony .column h4 {
+    color: #555;
+    font-weight: normal;
+}
+
+.testimony .column p {
+    font-size: 1rem;
+}
+
+/* FOOTER */
+.footer {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    padding: 40px;
+    color: #fff;
+    background-color: #011c39;
+}
+
+.footer>* {
+    flex: 1 100%;
+}
+
+.footer-left {
+    flex: 1 0px;
+    margin-right: 1.2em;
+    margin-bottom: 10px;
+}
+
+
+.footer-left img {
+    width: 50%;
+    height: 140px;
+}
+
+h3 {
+    font-weight: 600;
+    font-size: 17px;
+}
+
+.footer ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.footer li {
+    line-height: 2rem;
+}
+
+.footer a {
+    text-decoration: none;
+}
+
+.footer-right {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 2 0px;
+}
+
+.footer-right>* {
+    flex: 1;
+    margin-right: 1.2em;
+}
+
+.box a {
+    color: #999;
+}
+
+
+.footer-bottom {
+    text-align: center;
+    color: #999;
+}
+
+.footer-left p {
+    padding-right: 20%;
+    color: #999;
+}
+
+.social a {
+    background-color: #364a62;
+    width: 40px;
+    height: 6px;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.social a i {
+    color: #e7f2f4;
+    padding: 14px 12px;
+    font-size: 40px;
+}
+
+/* AlL PRODUCTS */
+.sort {
+    justify-content: space-between;
+    margin: 10px 57px;
+}
+
+select {
+    border: 1px solid #011c39;
+    padding: 5px;
+}
+
+/* DIFFERENT PAGES */
+.page-btn {
+    margin: 0px 0px 40px 80px;
+}
+
+.page-btn a {
+    display: inline-block;
+    border: 1px solid #ff523b;
+    margin-left: 10px;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+    cursor: pointer;
+}
+
+.page-btn a:hover {
+    background-color: #011c39;
+    color: #fff;
+}
+
+
+/* SINGLE PRODUCT PAGE */
+.s-product {
+    margin-top: 80px;
+}
+
+.s-product .col-2 img {
+    padding: 0;
+    height: 400px;
+}
+
+.s-product .col-2 {
+    padding: 20px;
+    text-align: left;
+}
+
+.s-product h4 {
+    margin: 20px 0;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.s-product select {
+    display: block;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+.s-product input {
+    width: 50px;
+    height: 40px;
+    padding-left: 10px;
+    font-size: 20px;
+    margin-right: 10px;
+    border: 1px solid #011c39;
+}
+
+input:focus {
+    outline: none;
+}
+
+.s-product .fa-indent {
+    margin-left: 10px;
+}
+
+.s-product p {
+    font-size: 18px;
+}
+
+.row-2 {
+    color: #011c39;
+    justify-content: space-between;
+}
+
+.row-2 a {
+    color: #011c39;
+}
+
+.row-2 a:hover {
+    color: #ff523b;
+}

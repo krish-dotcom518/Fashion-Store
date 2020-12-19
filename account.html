@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+        integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="css/utility.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Products-FStore</title>
+</head>
+<!-- header -->
+
+<body>
+    <!-- Header -->
+    <header id="home" class=" s-pro">
+
+        <div id="navbar" class="navbar top acc">
+            <div class="logo">
+                <h1><a href="index.html"><i class="fab fa-foursquare mob"></i></a><span class="mobs">FashionStore</span>
+                </h1>
+            </div>
+            <nav>
+                <button class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <ul class="nav-ul" id="nav-ul">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="product.html">Product</a></li>
+                    <li><a href="#">Inspiration</a></li>
+                    <li><a href="account.html">Account</a></li>
+                    <li><a href="cart.html" class="icon"><i class="fas fa-shopping-cart"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="account">
+        <div class="container">
+            <div class="row ">
+                <div class="col-2">
+                    <img src="images/fourth.png" width="100%">
+                </div>
+                <div class="col-2">
+                    <div class="form-container">
+                        <div class="form-btn">
+                            <span onclick="login()">Login</span>
+                            <span onclick="reg()">Register</span>
+                            <hr id="active">
+                        </div>
+                        <form action="#" id="loginFrm">
+                            <input type="text" placeholder="Username">
+                            <input type="password" placeholder="passwprd">
+                            <button type="submit" class="btn ">Login</button>
+                            <a href="#">Forgot password</a>
+                        </form>
+                        <form action="#" id="regFrm">
+                            <input type="text" placeholder="Username">
+                            <input type="email" placeholder="Email">
+                            <input type="password" placeholder="passwprd">
+                            <button type="submit" class="btn">Register</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-left">
+            <img src="images/logo.jpeg" alt="">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
+            <div class="social">
+                <a href="#"><i class="fab fa-facebook fa-2x"></i></a>
+                <a href="#"><i class="fab fa-twitter fa-2x"></i></a>
+                <a href="#"><i class="fab fa-youtube fa-2x"></i></a>
+                <a href="#"><i class="fab fa-linkedin fa-2x"></i></a>
+            </div>
+        </div>
+
+        <ul class="footer-right">
+            <li>
+                <h3>Useful links</h3>
+
+                <ul class="box">
+                    <li><a href="#">Coupon</a></li>
+                    <li><a href="#">Join policy</a></li>
+                    <li><a href="#">Blog post</a></li>
+                    <li><a href="#">Inspiration</a></li>
+                    <li><a href="#">Account</a></li>
+                </ul>
+            </li>
+            <li class="feature">
+                <h3>Products</h3>
+
+                <ul class="box">
+                    <li><a href="#">Shoes</a></li>
+                    <li><a href="#">Shirts</a></li>
+                    <li><a href="#">Bag pack</a></li>
+                    <li><a href="#">Eyewear</a></li>
+                    <li><a href="#">Womens</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <h3>Address</h3>
+
+                <ul class="box">
+                    <li><a href="#">123,Cyber City</a></li>
+                    <li><a href="#">Sector 12</a></li>
+                    <li><a href="#">Gurugram, Haryana</a></li>
+                    <li><a href="#">112353</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="footer-bottom">
+            <p>All right reserved &copy; FashionStore 2020</p>
+        </div>
+    </footer>
+
+
+    </section>
+
+
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js"
+        integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+    <script src="js/index.js"></script>
+
+</body>
+
+</html>
