@@ -60,4 +60,71 @@ document.addEventListener('DOMContentLoaded', () => {
             active.style.transform = "translateX(0px)";
         }
     }
+
+    // ✅ Chatbot Logic
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+  const chatbox = document.getElementById('chatbox');
+  const userInput = document.getElementById('user-input');
+  const chatMessages = document.getElementById('chat-messages');
+  const closeChat = document.getElementById('close-chat');
+  const micBtn = document.getElementById('mic-btn');
+
+  if (chatbotToggle && chatbox && userInput && chatMessages && closeChat) {
+    chatbotToggle.addEventListener('click', () => {
+      chatbox.classList.toggle('hidden');
+    });
+
+    closeChat.addEventListener('click', () => {
+      chatbox.classList.add('hidden');
+    });
+
+    const botReply = async (message) => {
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        if (response.status === 429) {
+          return "⚠️ You're out of AI usage quota. Please check billing.";
+        }
+
+        const data = await response.json();
+        return data.reply || "⚠️ No reply from the AI.";
+      } catch (err) {
+        console.error("Cohere error:", err);
+        return "⚠️ Sorry, I couldn’t connect to the AI server.";
+      }
+    };
+
+    userInput.addEventListener('keypress', async function (e) {
+      if (e.key === 'Enter') {
+        const msg = userInput.value.trim();
+        if (!msg) return;
+
+        chatMessages.innerHTML += `<div><strong>You:</strong> ${msg}</div>`;
+        userInput.value = '';
+
+        chatMessages.innerHTML += `<div><strong>Bot:</strong> <em>Typing...</em></div>`;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const reply = await botReply(msg);
+        const lastBotMsg = chatMessages.querySelector('div:last-child');
+        lastBotMsg.innerHTML = `<strong>Bot:</strong> ${reply}`;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        if (
+          reply.includes("out of AI") ||
+          reply.includes("No reply") ||
+          reply.includes("connect to the AI server")
+        ) {
+          userInput.disabled = true;
+          userInput.placeholder = "⚠️ AI temporarily unavailable";
+          userInput.style.backgroundColor = "#f5f5f5";
+          userInput.style.cursor = "not-allowed";
+        }
+      }
+    });
+}
 });
