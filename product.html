@@ -305,14 +305,22 @@
 
     <!-- Chatbot Toggle Button -->
 <div id="chatbot-container">
-    <button id="chatbot-toggle">&#128172;</button>
-    <div id="chatbox" class="hidden">
-        <div id="chat-header">Your AI Assistant<span id="close-chat">×</span></div>
-        <div id="chat-messages"></div>
-        <input type="text" id="user-input" placeholder="Type a message..." />
-    </div>
-</div>
+  <!-- 💬 This is the chatbot icon toggle button -->
+  <button id="chatbot-toggle" title="Open Chatbot">💬</button>
 
+  <!-- Chatbox -->
+  <div id="chatbox" class="hidden">
+    <div id="chat-header">Your AI Assistant <span id="close-chat">×</span></div>
+     
+    <div id="chat-messages"></div>
+    
+    <div id="chat-input-wrapper">
+        <div id="chat-status" style="display: none;">🎤 Listening...</div>
+      <input type="text" id="user-input" placeholder="Type a message..." />
+      <button id="mic-button" title="Speak">🎤</button>
+    </div>
+  </div>
+</div>
 
 </body>
 

@@ -431,17 +431,13 @@ form a {
 }
 
 #user-input {
-  border: none;
-  padding: 18px 20px;
-  font-size: 1.1rem;
-  font-weight: 600;              /* bold text */
-  width: 100%;
-  box-sizing: border-box;
-  border-top: 1px solid #ddd;
-  outline: none;
-  background: #ffffff;
-  border-radius: 0 0 20px 20px;
-  color: #333;
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #f8f9fa;
 }
 
 #user-input::placeholder {
@@ -450,6 +446,14 @@ form a {
   font-weight: 600;
   font-style: italic;
   opacity: 1;
+}
+
+#chat-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid #eee;
 }
 
 /* FOR FOOTER */
@@ -551,4 +555,18 @@ form a {
         display: none;
     }
 
+}
+
+#mic-button {
+  padding: 10px 14px;
+  font-size: 20px;
+  border: none;
+  background: #dfeaff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+#mic-button:hover {
+  background-color: #cddffd;
 }
