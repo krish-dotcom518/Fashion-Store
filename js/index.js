@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // ===================== Navbar Scroll Effect =====================
+    // Navbar scroll behavior
     const navbar = document.getElementById('navbar');
     let scrolled = false;
 
-    window.onscroll = () => {
+    window.onscroll = function () {
         if (window.pageYOffset > 40) {
             navbar.classList.remove('top');
             if (!scrolled) {
@@ -19,20 +19,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // ===================== Smooth Scrolling (jQuery required) =====================
-    if (window.jQuery) {
-        $('#navbar a, .btn').on('click', function (e) {
-            if (this.hash !== '') {
-                e.preventDefault();
-                const hash = this.hash;
-                $('html, body').animate({
-                    scrollTop: $(hash).offset().top - 100,
-                }, 800);
-            }
-        });
-    }
+    // Smooth Scrolling (requires jQuery)
+    $('#navbar a, .btn').on('click', function (e) {
+        if (this.hash !== '') {
+            e.preventDefault();
+            const hash = this.hash;
+            $('html, body').animate({
+                scrollTop: $(hash).offset().top - 100,
+            }, 800);
+        }
+    });
 
-    // ===================== Hamburger Menu =====================
+    // Hamburger menu
     const hamburger = document.getElementById('hamburger');
     const navUl = document.getElementById('nav-ul');
 
@@ -42,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ===================== Login/Register Form Toggle =====================
+    // Login/Register form toggle (if on account page)
     const loginFrm = document.getElementById("loginFrm");
     const regFrm = document.getElementById("regFrm");
     const active = document.getElementById("active");
@@ -53,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginFrm.style.transform = "translateX(0px)";
             active.style.transform = "translateX(100px)";
         }
-    };
+    }
 
     window.login = function () {
         if (regFrm && loginFrm && active) {
@@ -61,9 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
             loginFrm.style.transform = "translateX(300px)";
             active.style.transform = "translateX(0px)";
         }
-    };
+    }
 
-    // ===================== Chatbot Logic =====================
+    // Chatbot Logic
     const chatbotToggle = document.getElementById('chatbot-toggle');
     const chatbox = document.getElementById('chatbox');
     const userInput = document.getElementById('user-input');
@@ -71,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeChat = document.getElementById('close-chat');
 
     if (chatbotToggle && chatbox && userInput && chatMessages && closeChat) {
-        // Toggle chat visibility
         chatbotToggle.addEventListener('click', () => {
             chatbox.classList.toggle('hidden');
         });
@@ -80,51 +77,31 @@ document.addEventListener('DOMContentLoaded', () => {
             chatbox.classList.add('hidden');
         });
 
-        // Optional: welcome message
-        chatMessages.innerHTML += `<div><strong>Bot:</strong> Hi! 👋 I'm your assistant. How can I help you today?</div>`;
-
-        // Send message to backend/OpenAI
-        const botReply = async (message) => {
-            try {
-                const response = await fetch('http://localhost:5000/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to get response from server');
-                }
-
-                const data = await response.json();
-                return data.reply || "Sorry, I didn't understand that.";
-            } catch (error) {
-                console.error("Chatbot API Error:", error);
-                return "Oops! Something went wrong. Please try again.";
-            }
+        const botReply = (message) => {
+            const responses = {
+                'hello': 'Hi there! How can I help you today?',
+                'price': 'You can find pricing details under each product.',
+                'return': 'Our return policy lasts 7 days. Contact support for more info.',
+                'account': 'You can log in or register from the Account page.',
+                'cart': 'Click the cart icon on the top right to view your items.',
+                'default': 'Sorry, I didn\'t understand that. Please try something else.'
+            };
+            const lower = message.toLowerCase();
+            return responses[lower] || responses['default'];
         };
 
-        // Handle Enter key
-        userInput.addEventListener('keypress', async function (e) {
+        userInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                const msg = userInput.value.trim();
-                if (!msg) return;
+                const msg = userInput.value;
+                if (!msg.trim()) return;
 
-                // Show user message
                 chatMessages.innerHTML += `<div><strong>You:</strong> ${msg}</div>`;
+                setTimeout(() => {
+                    chatMessages.innerHTML += `<div><strong>Bot:</strong> ${botReply(msg)}</div>`;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 600);
+
                 userInput.value = '';
-
-                // Show typing placeholder
-                chatMessages.innerHTML += `<div><strong>Bot:</strong> <em>Typing...</em></div>`;
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                // Get reply
-                const reply = await botReply(msg);
-
-                // Replace typing with reply
-                const lastBotMsg = chatMessages.querySelector('div:last-child');
-                lastBotMsg.innerHTML = `<strong>Bot:</strong> ${reply}`;
-                chatMessages.scrollTop = chatMessages.scrollHeight;
             }
         });
     }

@@ -347,6 +347,69 @@ form a {
     transition: transform 1000ms;
 
 }
+#chatbot-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    font-family: 'Poppins', sans-serif;
+}
+
+#chatbot-toggle {
+    background-color: #243a6f;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+#chatbox {
+    width: 300px;
+    height: 400px;
+    background: white;
+    border: 1px solid #243a6f;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+    overflow: hidden;
+}
+
+#chatbox.hidden {
+    display: none;
+}
+
+#chat-header {
+    background-color: #243a6f;
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#chat-messages {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+}
+
+#user-input {
+    border: none;
+    border-top: 1px solid #ddd;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
 
 
 
