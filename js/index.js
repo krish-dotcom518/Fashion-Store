@@ -60,49 +60,4 @@ document.addEventListener('DOMContentLoaded', () => {
             active.style.transform = "translateX(0px)";
         }
     }
-
-    // Chatbot Logic
-    const chatbotToggle = document.getElementById('chatbot-toggle');
-    const chatbox = document.getElementById('chatbox');
-    const userInput = document.getElementById('user-input');
-    const chatMessages = document.getElementById('chat-messages');
-    const closeChat = document.getElementById('close-chat');
-
-    if (chatbotToggle && chatbox && userInput && chatMessages && closeChat) {
-        chatbotToggle.addEventListener('click', () => {
-            chatbox.classList.toggle('hidden');
-        });
-
-        closeChat.addEventListener('click', () => {
-            chatbox.classList.add('hidden');
-        });
-
-        const botReply = (message) => {
-            const responses = {
-                'hello': 'Hi there! How can I help you today?',
-                'price': 'You can find pricing details under each product.',
-                'return': 'Our return policy lasts 7 days. Contact support for more info.',
-                'account': 'You can log in or register from the Account page.',
-                'cart': 'Click the cart icon on the top right to view your items.',
-                'default': 'Sorry, I didn\'t understand that. Please try something else.'
-            };
-            const lower = message.toLowerCase();
-            return responses[lower] || responses['default'];
-        };
-
-        userInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                const msg = userInput.value;
-                if (!msg.trim()) return;
-
-                chatMessages.innerHTML += `<div><strong>You:</strong> ${msg}</div>`;
-                setTimeout(() => {
-                    chatMessages.innerHTML += `<div><strong>Bot:</strong> ${botReply(msg)}</div>`;
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }, 600);
-
-                userInput.value = '';
-            }
-        });
-    }
 });
