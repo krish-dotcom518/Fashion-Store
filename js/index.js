@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // ✅ Navbar scroll behavior
   const navbar = document.getElementById('navbar');
   let scrolled = false;
 
