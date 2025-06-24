@@ -185,12 +185,14 @@
 
     faceMesh.onResults(({ multiFaceLandmarks }) => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   if (multiFaceLandmarks && multiFaceLandmarks.length > 0) {
     const lm = multiFaceLandmarks[0];
 
-    const leftTemple = lm[234];   // left frame anchor
-    const rightTemple = lm[454];  // right frame anchor
-    const nose = lm[1];           // nose tip for vertical center
+    const leftTemple = lm[234];
+    const rightTemple = lm[454];
+    const leftEye = lm[159];
+    const rightEye = lm[386];
 
     const lx = leftTemple.x * canvas.width;
     const ly = leftTemple.y * canvas.height;
@@ -198,7 +200,8 @@
     const ry = rightTemple.y * canvas.height;
 
     const centerX = (lx + rx) / 2;
-    const centerY = nose.y * canvas.height;
+    const centerY = ((leftEye.y + rightEye.y) / 2) * canvas.height;
+    const offsetY = 10; // adjust as needed to fit eyes better
 
     const glassesWidth = Math.hypot(rx - lx, ry - ly) * 1.1;
     const aspectRatio = glassesImage.naturalWidth / glassesImage.naturalHeight;
@@ -207,7 +210,7 @@
     const angle = Math.atan2(ry - ly, rx - lx);
 
     ctx.save();
-    ctx.translate(centerX, centerY);
+    ctx.translate(centerX, centerY + offsetY);
     ctx.rotate(angle);
     ctx.drawImage(
       glassesImage,
