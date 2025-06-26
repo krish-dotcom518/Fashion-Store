@@ -172,4 +172,47 @@ document.addEventListener('DOMContentLoaded', () => {
       micBtn.innerText = '🎤';
     };
   }
+  // ✅ AI Size Estimator Logic
+  const estimatorBtn = document.getElementById('size-estimator-btn');
+  const estimatorModal = document.getElementById('size-estimator-modal');
+  const submitEstimate = document.getElementById('submit-estimate');
+  const closeEstimator = document.getElementById('close-estimator');
+
+  if (estimatorBtn && estimatorModal) {
+    estimatorBtn.addEventListener('click', () => {
+      estimatorModal.style.display = 'block';
+    });
+  }
+
+  if (closeEstimator && estimatorModal) {
+    closeEstimator.addEventListener('click', () => {
+      estimatorModal.style.display = 'none';
+    });
+  }
+
+  if (submitEstimate) {
+    submitEstimate.addEventListener('click', () => {
+      const height = parseInt(document.getElementById('height').value);
+      const weight = parseInt(document.getElementById('weight').value);
+      const gender = document.getElementById('gender').value;
+      const resultBox = document.getElementById('size-result');
+
+      if (!height || !weight || !gender) {
+        resultBox.innerText = "⚠️ Please fill all fields.";
+        return;
+      }
+
+      let size = 'M';
+      if (gender === 'male') {
+        if (height < 160 || weight < 55) size = 'S';
+        else if (height > 180 || weight > 80) size = 'L';
+      } else {
+        if (height < 150 || weight < 45) size = 'S';
+        else if (height > 170 || weight > 70) size = 'L';
+      }
+
+      resultBox.innerText = `✅ Recommended Size: ${size}`;
+    });
+  }
+
 });

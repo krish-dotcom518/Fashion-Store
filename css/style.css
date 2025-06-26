@@ -570,5 +570,179 @@ form a {
 #mic-button:hover {
   background-color: #cddffd;
 }
+/* ============================
+   AI SIZE ESTIMATOR MODAL
+   ============================ */
+#size-estimator-modal {
+  display: none;
+  position: fixed;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  padding: 30px 25px;
+  border: 2px solid #243a6f;
+  border-radius: 15px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
 
+#size-estimator-modal h3 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #243a6f;
+}
 
+#size-estimator-modal input,
+#size-estimator-modal select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+}
+
+#size-estimator-modal button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: none;
+  background-color: #243a6f;
+  color: #fff;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+#size-estimator-modal button:hover {
+  background-color: #324c96;
+}
+
+#size-result {
+  font-weight: bold;
+  margin-top: 15px;
+  color: #243a6f;
+}
+
+/* Responsive for AI Size Estimator */
+@media screen and (max-width: 480px) {
+  #size-estimator-modal {
+    width: 95%;
+    padding: 20px 15px;
+  }
+
+  #size-estimator-modal h3 {
+    font-size: 1.2rem;
+  }
+
+  #size-estimator-modal input,
+  #size-estimator-modal select {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+  #size-estimator-modal button {
+    font-size: 0.95rem;
+  }
+}
+.estimator-modal-box label {
+  text-align: left;
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #243a6f;
+}
+
+.estimator-modal-box input[type="file"] {
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.estimator-modal-box input[type="file"]:hover {
+  background: #f0f0f0;
+  cursor: pointer;
+}
+
+/* =============================
+   AI Estimator Floating Button
+   ============================= */
+#estimator-float-btn {
+  position: fixed;
+  bottom: 120px; /* was 95px — increase to move higher */
+  right: 25px;
+  z-index: 999;
+}
+
+#estimator-float-btn button {
+  background-color: #243a6f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 24px;
+  font-size: 32px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+
+#estimator-float-btn button:hover {
+  background-color: #324c96;
+  transform: scale(1.1);
+}
+/* Horizontal layout form */
+.estimator-modal-box.wide {
+  width: 95%;
+  max-width: 850px;
+}
+
+.estimator-form-row {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.form-group.full {
+  width: 100%;
+  margin-top: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #243a6f;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f9f9f9;
+}
+
+.form-group input[type="file"] {
+  padding: 10px;
+  background: #f0f0f0;
+}
