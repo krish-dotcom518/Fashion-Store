@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // ✅ Smooth scrolling (with jQuery)
   $('#navbar a, .btn').on('click', function (e) {
     if (this.hash !== '') {
       e.preventDefault();
@@ -29,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ✅ Hamburger toggle
   const hamburger = document.getElementById('hamburger');
   const navUl = document.getElementById('nav-ul');
   if (hamburger && navUl) {
@@ -38,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ✅ Form toggle
   const loginFrm = document.getElementById("loginFrm");
   const regFrm = document.getElementById("regFrm");
   const active = document.getElementById("active");
@@ -59,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ✅ Chatbot elements
   const chatbotToggle = document.getElementById('chatbot-toggle');
   const chatbox = document.getElementById('chatbox');
   const userInput = document.getElementById('user-input');
@@ -68,21 +64,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const micBtn = document.getElementById('mic-button');
   const statusBox = document.getElementById('chat-status');
 
-  // ✅ Toggle chatbot box
   if (chatbotToggle) {
     chatbotToggle.addEventListener('click', () => {
       chatbox.classList.toggle('hidden');
     });
   }
 
-  // ✅ Close chatbot
   if (closeChat) {
     closeChat.addEventListener('click', () => {
       chatbox.classList.add('hidden');
     });
   }
 
-  // ✅ Send message to AI
   async function botReply(message) {
     try {
       const response = await fetch('/api/chat', {
@@ -103,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ✅ Handle text input + Enter
   if (userInput) {
     userInput.addEventListener('keypress', async function (e) {
       if (e.key === 'Enter') {
@@ -135,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ✅ Voice Assistant
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRecognition && micBtn) {
     const recognition = new SpeechRecognition();
@@ -172,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
       micBtn.innerText = '🎤';
     };
   }
+
   // ✅ AI Size Estimator Logic
   const estimatorBtn = document.getElementById('size-estimator-btn');
   const estimatorModal = document.getElementById('size-estimator-modal');
@@ -180,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (estimatorBtn && estimatorModal) {
     estimatorBtn.addEventListener('click', () => {
-      estimatorModal.style.display = 'block';
+      estimatorModal.style.display = 'flex'; // assuming modal is flex-centered
     });
   }
 
@@ -190,29 +182,79 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (submitEstimate) {
-    submitEstimate.addEventListener('click', () => {
-      const height = parseInt(document.getElementById('height').value);
-      const weight = parseInt(document.getElementById('weight').value);
-      const gender = document.getElementById('gender').value;
-      const resultBox = document.getElementById('size-result');
+  let detector;
 
-      if (!height || !weight || !gender) {
-        resultBox.innerText = "⚠️ Please fill all fields.";
-        return;
-      }
-
-      let size = 'M';
-      if (gender === 'male') {
-        if (height < 160 || weight < 55) size = 'S';
-        else if (height > 180 || weight > 80) size = 'L';
-      } else {
-        if (height < 150 || weight < 45) size = 'S';
-        else if (height > 170 || weight > 70) size = 'L';
-      }
-
-      resultBox.innerText = `✅ Recommended Size: ${size}`;
+  async function loadDetector() {
+    detector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
+      runtime: 'mediapipe',
+      solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose',
     });
   }
 
+  loadDetector();
+
+  if (submitEstimate) {
+    submitEstimate.addEventListener('click', async () => {
+  const height = parseInt(document.getElementById('height').value);
+  const weight = parseInt(document.getElementById('weight').value);
+  const gender = document.getElementById('gender').value;
+  const resultBox = document.getElementById('size-result');
+  const fileInput = document.getElementById('photo');
+  const file = fileInput.files[0];
+
+  // ✅ Clear old result
+  resultBox.innerText = '';
+
+  // ✅ Show loading message
+  resultBox.innerHTML = `<span style="color: #243a6f;">
+  <span class="emoji-loader">⏳</span> Processing your image, please wait...
+</span>`;
+resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+
+
+  if (!file) {
+    resultBox.innerHTML = `<span style="color: red;">❌ Please upload a photo to continue.</span>`;
+    return;
+  }
+
+  // Load image
+  const image = new Image();
+  image.src = URL.createObjectURL(file);
+  await new Promise(resolve => (image.onload = resolve));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 640;
+  canvas.height = 480;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  const poses = await detector.estimatePoses(canvas);
+  if (!poses.length) {
+    resultBox.innerHTML = `<span style="color: red;">❌ Could not detect body in the image.</span>`;
+    return;
+  }
+
+  const keypoints = poses[0].keypoints;
+  const nose = keypoints.find(k => k.name === 'nose');
+  const ankle = keypoints.find(k => k.name === 'left_ankle') || keypoints.find(k => k.name === 'right_ankle');
+  const leftShoulder = keypoints.find(k => k.name === 'left_shoulder');
+  const rightShoulder = keypoints.find(k => k.name === 'right_shoulder');
+
+  if (!nose || !ankle || !leftShoulder || !rightShoulder) {
+    resultBox.innerHTML = `<span style="color: red;">❌ Full-body not visible. Please upload a clear photo.</span>`;
+    return;
+  }
+
+  const heightPixels = Math.abs(ankle.y - nose.y);
+  const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+
+  let size = 'M';
+  if (heightPixels < 250 || shoulderWidth < 80) size = 'S';
+  else if (heightPixels > 330 || shoulderWidth > 160) size = 'L';
+
+  // ✅ Show final result
+  resultBox.innerHTML = `<span style="color: green;">📸 Estimated Size: <strong>${size}</strong></span>`;
+});
+
+  }
 });

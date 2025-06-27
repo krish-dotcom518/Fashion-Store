@@ -746,3 +746,14 @@ form a {
   padding: 10px;
   background: #f0f0f0;
 }
+/* Animated emoji spin */
+@keyframes rotateEmoji {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(20deg); }
+  100% { transform: rotate(-20deg); }
+}
+
+.emoji-loader {
+  display: inline-block;
+  animation: rotateEmoji 0.6s infinite alternate ease-in-out;
+}

@@ -207,17 +207,17 @@
     <script src="https://code.jquery.com/jquery-3.5.0.min.js"
         integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
     <script src="js/index.js"></script>
+    <!-- TensorFlow.js and BlazePose -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
 
     <!-- AI Size Estimator Floating Button -->
 <div id="estimator-float-btn">
   <button id="size-estimator-btn" title="Estimate My Size">📏</button>
 </div>
-
-
-
-
-
-    <!-- Chatbot Toggle Button -->
+<!-- Chatbot Toggle Button -->
 <div id="chatbot-container">
   <!-- 💬 This is the chatbot icon toggle button -->
   <button id="chatbot-toggle" title="Open Chatbot">💬</button>
@@ -243,12 +243,12 @@
 
     <div class="estimator-form-row">
       <div class="form-group">
-        <label for="height">📏 Height (cm)</label>
+        <label for="height">📏 Height (cm)<small>(optional)</small></label>
         <input type="number" id="height" placeholder="e.g. 165" />
       </div>
 
       <div class="form-group">
-        <label for="weight">⚖️ Weight (kg)</label>
+        <label for="weight">⚖️ Weight (kg)<small>(optional)</small></label>
         <input type="number" id="weight" placeholder="e.g. 60" />
       </div>
 
@@ -263,13 +263,18 @@
     </div>
 
     <div class="form-group full">
-      <label for="photo">📸 Upload a Photo (optional)</label>
-      <input type="file" id="photo" accept="image/*" />
+      <label for="photo">📸 Upload a Photo<span style="color: red;">*</span></label>
+      <input type="file" id="photo" accept="image/*" required/>
     </div>
 
     <button id="submit-estimate">🎯 Get My Size</button>
     <div id="size-result"></div>
     <button id="close-estimator" class="close-btn">❌ Close</button>
+    <canvas id="preview-canvas" style="display: none;"></canvas>
+    <!-- Animated Loader (hidden by default) -->
+<div id="loader" style="display: none; font-size: 1.2rem; text-align: center;">
+  <span class="emoji-loader">⏳</span> Processing your image...
+</div>
   </div>
 </div>
 
