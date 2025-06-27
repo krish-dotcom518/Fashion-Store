@@ -39,6 +39,22 @@
             </nav>
         </div>
     </header>
+    <!-- 💡 Stylish Visual Search Section -->
+<section class="visual-search-section">
+  <div class="vs-container">
+    <h2 class="vs-title">👗 Try Visual Search</h2>
+    <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
+    
+    <label class="vs-upload-btn">
+      Upload Outfit
+      <input type="file" id="upload" accept="image/*" hidden />
+    </label>
+
+    <br />
+    <img id="user-image" class="vs-preview" hidden />
+    <div id="results" class="vs-results"></div>
+  </div>
+</section>
 
     <div class="account">
         <div class="container">
@@ -71,7 +87,10 @@
         </div>
     </div>
 
-
+<!-- TensorFlow JS -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+<script src="js/visual-search.js"></script>
 
     <!-- FOOTER -->
     <footer class="footer">
