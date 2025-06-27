@@ -248,8 +248,8 @@ resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
   const heightPixels = Math.abs(ankle.y - nose.y);
   const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
 
-  let size = 'M';
-  if (heightPixels < 250 || shoulderWidth < 80) size = 'S';
+  let size = 'S';
+  if (heightPixels < 250 || shoulderWidth < 80) size = 'M';
   else if (heightPixels > 330 || shoulderWidth > 160) size = 'L';
 
   // ✅ Show final result
