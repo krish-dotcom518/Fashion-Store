@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // ✅ Navbar Scroll Behavior
   const navbar = document.getElementById('navbar');
   let scrolled = false;
 
@@ -18,16 +19,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  $('#navbar a, .btn').on('click', function (e) {
-    if (this.hash !== '') {
-      e.preventDefault();
-      const hash = this.hash;
-      $('html, body').animate({
-        scrollTop: $(hash).offset().top - 100,
-      }, 800);
-    }
-  });
+  // ✅ Safe Smooth Scroll with Existence Check
+ $('#navbar a[href^="#"]').on('click', function (e) {
+  const hash = this.hash;
+  const target = $(hash);
+  if (target.length) {
+    e.preventDefault();
+    $('html, body').animate({
+      scrollTop: target.offset().top - 100,
+    }, 800);
+  } else {
+    console.warn(`⚠️ No element found for ${hash}`);
+  }
+});
 
+
+  // ✅ Hamburger Menu
   const hamburger = document.getElementById('hamburger');
   const navUl = document.getElementById('nav-ul');
   if (hamburger && navUl) {
@@ -36,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ✅ Login/Register Toggle
   const loginFrm = document.getElementById("loginFrm");
   const regFrm = document.getElementById("regFrm");
   const active = document.getElementById("active");
@@ -56,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ✅ Chatbot Logic
   const chatbotToggle = document.getElementById('chatbot-toggle');
   const chatbox = document.getElementById('chatbox');
   const userInput = document.getElementById('user-input');
@@ -91,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       return data.reply || "⚠️ No reply from the AI.";
     } catch (err) {
-      console.error("Cohere error:", err);
+      console.error("AI error:", err);
       return "⚠️ Sorry, I couldn’t connect to the AI server.";
     }
   }
@@ -101,23 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter') {
         const msg = userInput.value.trim();
         if (!msg) return;
-
         chatMessages.innerHTML += `<div><strong>You:</strong> ${msg}</div>`;
         userInput.value = '';
-
         chatMessages.innerHTML += `<div><strong>Bot:</strong> <em>Typing...</em></div>`;
         chatMessages.scrollTop = chatMessages.scrollHeight;
-
         const reply = await botReply(msg);
-        const lastBotMsg = chatMessages.querySelector('div:last-child');
-        lastBotMsg.innerHTML = `<strong>Bot:</strong> ${reply}`;
+        chatMessages.lastChild.innerHTML = `<strong>Bot:</strong> ${reply}`;
         chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        if (
-          reply.includes("out of AI") ||
-          reply.includes("No reply") ||
-          reply.includes("connect to the AI server")
-        ) {
+        if (reply.includes("out of AI") || reply.includes("No reply") || reply.includes("connect")) {
           userInput.disabled = true;
           userInput.placeholder = "⚠️ AI temporarily unavailable";
           userInput.style.backgroundColor = "#f5f5f5";
@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ✅ Mic Button with Speech Recognition
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRecognition && micBtn) {
     const recognition = new SpeechRecognition();
@@ -135,14 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
     recognition.continuous = false;
 
     micBtn.addEventListener('click', () => {
-      if (chatbox.classList.contains('hidden')) {
-        chatbox.classList.remove('hidden');
-      }
-
+      chatbox.classList.remove('hidden');
       statusBox.innerText = "🎤 Listening...";
       statusBox.style.display = 'block';
       micBtn.innerText = '🗣️';
-
       recognition.start();
     });
 
@@ -159,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     recognition.onerror = (event) => {
       statusBox.innerText = "❌ Voice error: " + event.error;
-      setTimeout(() => (statusBox.style.display = 'none'), 2000);
+      setTimeout(() => statusBox.style.display = 'none', 2000);
       micBtn.innerText = '🎤';
     };
   }
@@ -172,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (estimatorBtn && estimatorModal) {
     estimatorBtn.addEventListener('click', () => {
-      estimatorModal.style.display = 'flex'; // assuming modal is flex-centered
+      estimatorModal.style.display = 'flex';
     });
   }
 
@@ -195,66 +192,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (submitEstimate) {
     submitEstimate.addEventListener('click', async () => {
-  const height = parseInt(document.getElementById('height').value);
-  const weight = parseInt(document.getElementById('weight').value);
-  const gender = document.getElementById('gender').value;
-  const resultBox = document.getElementById('size-result');
-  const fileInput = document.getElementById('photo');
-  const file = fileInput.files[0];
+      const height = parseInt(document.getElementById('height').value);
+      const weight = parseInt(document.getElementById('weight').value);
+      const gender = document.getElementById('gender').value;
+      const resultBox = document.getElementById('size-result');
+      const fileInput = document.getElementById('photo');
+      const file = fileInput.files[0];
 
-  // ✅ Clear old result
-  resultBox.innerText = '';
+      resultBox.innerHTML = `<span style="color: #243a6f;">
+        <span class="emoji-loader">⏳</span> Processing your image, please wait...
+      </span>`;
+      resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
 
-  // ✅ Show loading message
-  resultBox.innerHTML = `<span style="color: #243a6f;">
-  <span class="emoji-loader">⏳</span> Processing your image, please wait...
-</span>`;
-resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (!file) {
+        resultBox.innerHTML = `<span style="color: red;">❌ Please upload a photo to continue.</span>`;
+        return;
+      }
 
+      const image = new Image();
+      image.src = URL.createObjectURL(file);
+      await new Promise(resolve => image.onload = resolve);
 
-  if (!file) {
-    resultBox.innerHTML = `<span style="color: red;">❌ Please upload a photo to continue.</span>`;
-    return;
-  }
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-  // Load image
-  const image = new Image();
-  image.src = URL.createObjectURL(file);
-  await new Promise(resolve => (image.onload = resolve));
+      const poses = await detector.estimatePoses(canvas);
+      if (!poses.length) {
+        resultBox.innerHTML = `<span style="color: red;">❌ Could not detect body in the image.</span>`;
+        return;
+      }
 
-  const canvas = document.createElement('canvas');
-  canvas.width = 640;
-  canvas.height = 480;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const keypoints = poses[0].keypoints;
+      const nose = keypoints.find(k => k.name === 'nose');
+      const ankle = keypoints.find(k => k.name === 'left_ankle') || keypoints.find(k => k.name === 'right_ankle');
+      const leftShoulder = keypoints.find(k => k.name === 'left_shoulder');
+      const rightShoulder = keypoints.find(k => k.name === 'right_shoulder');
 
-  const poses = await detector.estimatePoses(canvas);
-  if (!poses.length) {
-    resultBox.innerHTML = `<span style="color: red;">❌ Could not detect body in the image.</span>`;
-    return;
-  }
+      if (!nose || !ankle || !leftShoulder || !rightShoulder) {
+        resultBox.innerHTML = `<span style="color: red;">❌ Full-body not visible. Please upload a clear photo.</span>`;
+        return;
+      }
 
-  const keypoints = poses[0].keypoints;
-  const nose = keypoints.find(k => k.name === 'nose');
-  const ankle = keypoints.find(k => k.name === 'left_ankle') || keypoints.find(k => k.name === 'right_ankle');
-  const leftShoulder = keypoints.find(k => k.name === 'left_shoulder');
-  const rightShoulder = keypoints.find(k => k.name === 'right_shoulder');
+      const heightPixels = Math.abs(ankle.y - nose.y);
+      const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
 
-  if (!nose || !ankle || !leftShoulder || !rightShoulder) {
-    resultBox.innerHTML = `<span style="color: red;">❌ Full-body not visible. Please upload a clear photo.</span>`;
-    return;
-  }
+      let size = 'S';
+      if (heightPixels < 250 || shoulderWidth < 80) size = 'M';
+      else if (heightPixels > 330 || shoulderWidth > 160) size = 'L';
 
-  const heightPixels = Math.abs(ankle.y - nose.y);
-  const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
-
-  let size = 'S';
-  if (heightPixels < 250 || shoulderWidth < 80) size = 'M';
-  else if (heightPixels > 330 || shoulderWidth > 160) size = 'L';
-
-  // ✅ Show final result
-  resultBox.innerHTML = `<span style="color: green;">📸 Estimated Size: <strong>${size}</strong></span>`;
-});
-
+      resultBox.innerHTML = `<span style="color: green;">📸 Estimated Size: <strong>${size}</strong></span>`;
+    });
   }
 });

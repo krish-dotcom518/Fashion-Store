@@ -1,0 +1,252 @@
+<!-- 🌀 SPIN TO WIN GAME: HTML -->
+<div id="spin-wheel-container">
+    <h2 style="
+  color: #fff;
+  background: linear-gradient(to right, #d32f2f, #f44336); /* Cherry Red Gradient */
+  display: inline-block;
+  padding: 10px 25px;
+  border-radius: 12px;
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+">
+  🎉 Spin to Win!
+</h2>
+
+  <div class="wheel-wrapper">
+    <!-- 🎡 Canvas Wheel -->
+    <canvas id="wheelCanvas" width="400" height="400"></canvas>
+
+    <!-- 🎯 Spin Button -->
+    <button id="spinBtn" class="spin-btn">🎯 SPIN</button>
+  </div>
+  <div id="spin-result"></div>
+</div>
+
+<!-- Confetti -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="js/voice-nav.js"></script>
+
+<!-- 💄 STYLE -->
+<style>
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    background: linear-gradient(135deg, #fceabb, #f8b500);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    animation: floatUp 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes floatUp {
+    0% {
+      transform: translateY(100vh) scale(0.5);
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.6;
+    }
+    100% {
+      transform: translateY(-10vh) scale(1);
+      opacity: 0;
+    }
+  }
+
+  #spin-wheel-container {
+    text-align: center;
+    background: linear-gradient(135deg, #ff6f61, #ffcc70);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+    max-width: 500px;
+    width: 90vw;
+  }
+
+  .wheel-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #wheelCanvas {
+    border: 5px solid #ffd54f;
+    border-radius: 50%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .spin-btn {
+    margin-top: 30px;
+    padding: 15px 40px;
+    font-size: 18px;
+    background: linear-gradient(to right, #ff416c, #ff4b2b);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+  }
+
+  .spin-btn:hover {
+    transform: scale(1.05);
+  }
+
+  #spin-result {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #3f51b5;
+  }
+</style>
+
+<!-- 💡 SPIN LOGIC SCRIPT -->
+<script>
+  // 🎈 Floating bubbles
+  for (let i = 0; i < 20; i++) {
+    const bubble = document.createElement('div');
+    bubble.classList.add('bubble');
+    const size = Math.random() * 60 + 20;
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = `${Math.random() * 100}%`;
+    bubble.style.animationDuration = `${10 + Math.random() * 10}s`;
+    bubble.style.animationDelay = `${Math.random() * 5}s`;
+    document.body.appendChild(bubble);
+  }
+
+  // 🎡 WHEEL LOGIC
+  const canvas = document.getElementById("wheelCanvas");
+  const ctx = canvas.getContext("2d");
+  const segments = [
+    "🎁 ₹5000 OFF",
+    "🚚 Free Shipping",
+    "🎉 70% OFF",
+    "❌ Try Again",
+    "👕 ₹1000 OFF",
+    "🔥 Buy 1 Get 1",
+    "🎊 Surprise Gift",
+    "❌ No Luck"
+  ];
+  const colors = ["#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#4caf50", "#00bcd4", "#e91e63", "#9c27b0"];
+  const radius = canvas.width / 2;
+
+  function drawWheel(highlightIndex = -1, blinkState = false) {
+    const angle = (2 * Math.PI) / segments.length;
+    for (let i = 0; i < segments.length; i++) {
+      ctx.beginPath();
+      ctx.fillStyle = (i === highlightIndex)
+        ? (blinkState ? "#ffffff" : "#ffff00")
+        : colors[i % colors.length];
+
+      ctx.moveTo(radius, radius);
+      ctx.arc(radius, radius, radius, i * angle, (i + 1) * angle);
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate(i * angle + angle / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 14px sans-serif";
+      ctx.fillText(segments[i], radius - 10, 10);
+      ctx.restore();
+    }
+  }
+
+  drawWheel();
+
+  const spinBtn = document.getElementById("spinBtn");
+  const resultBox = document.getElementById("spin-result");
+
+  spinBtn.addEventListener("click", () => {
+    spinBtn.disabled = true;
+    resultBox.innerText = "Spinning... 🌀";
+
+    const spinAngle = Math.random() * 360 + 720;
+    const duration = 4000;
+    const start = performance.now();
+
+    function animate(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const currentAngle = spinAngle * easeOutCubic(progress);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate((currentAngle * Math.PI) / 180);
+      ctx.translate(-radius, -radius);
+      drawWheel();
+      ctx.restore();
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        const finalAngle = (spinAngle % 360);
+        const segmentAngle = 360 / segments.length;
+        const index = Math.floor((segments.length - finalAngle / segmentAngle) % segments.length);
+        const prize = segments[index];
+
+        let blink = true;
+        let blinkCount = 0;
+        const maxBlinks = 8;
+
+        function blinkAnimation() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.save();
+          ctx.translate(radius, radius);
+          ctx.rotate((finalAngle * Math.PI) / 180);
+          ctx.translate(-radius, -radius);
+          drawWheel(index, blink);
+          ctx.restore();
+
+          blink = !blink;
+          blinkCount++;
+
+          if (blinkCount < maxBlinks) {
+            setTimeout(blinkAnimation, 200);
+          } else {
+            resultBox.innerHTML = `🎉 You got: <strong>${segments[index]}</strong>`;
+            spinBtn.disabled = false;
+
+            if (!segments[index].includes("❌")) {
+              for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                  confetti({
+                    particleCount: 100,
+                    spread: 70 + i * 10,
+                    origin: { y: 0.6 }
+                  });
+                }, i * 300);
+              }
+            }
+          }
+        }
+
+        blinkAnimation();
+      }
+    }
+
+    requestAnimationFrame(animate);
+  });
+
+  function easeOutCubic(t) {
+    return (--t) * t * t + 1;
+  }
+</script>

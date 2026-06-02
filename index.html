@@ -10,7 +10,14 @@
         crossorigin="anonymous" />
     <link rel="stylesheet" href="css/utility.css">
     <link rel="stylesheet" href="css/style.css">
-    <title>FStore</title>
+
+    <script src="js/voice-nav.js"></script>
+    <!-- face-api.js library -->
+
+</script>
+
+
+    <title>FStore</title>>
 </head>
 <!-- header -->
 
@@ -51,22 +58,46 @@
         </div>
     </header>
 
-      <!-- 💡 Stylish Visual Search Section -->
-<section class="visual-search-section">
-  <div class="vs-container">
-    <h2 class="vs-title">👗 Try Visual Search</h2>
-    <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
-    
-    <label class="vs-upload-btn">
-      Upload Outfit
-      <input type="file" id="upload" accept="image/*" hidden />
-    </label>
+<section class="feature-section-row gradient-section">
+  <div class="card-row">
+    <!-- Visual Search Card -->
+    <div class="vs-card">
+      <h2 class="vs-title">👗 Try Visual Search</h2>
+      <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
 
-    <br />
-    <img id="user-image" class="vs-preview" hidden />
-    <div id="results" class="vs-results"></div>
+      <label for="imageUpload" class="vs-upload-btn">Upload Outfit</label>
+      <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
+
+      <img id="user-image" hidden style="max-width: 100%; display: block; margin: 20px auto;" />
+      <div id="results" class="results-grid"></div>
+    </div>
+
+    <!-- Geo Location Card -->
+    <div class="geo-card">
+      <h2>📍 Explore Trends Near You</h2>
+      <p>Discover what’s trending in your city and shop localized fashion picks!</p>
+      <button class="geo-btn" id="goToNearbyBtn">
+        <img src="images/geo-icon.webp" alt="geo-icon" />
+        <span>Use My Location</span>
+      </button>
+    </div>
+    <script>
+  document.getElementById("goToNearbyBtn")?.addEventListener("click", () => {
+    document.getElementById("goToNearbyBtn").querySelector("span").innerText = "Locating...";
+    window.location.href = "nearby.html";
+  });
+</script>
+
+    <!-- Voice Navigation Card -->
+    <div class="voice-card">
+      <h2>🎙️ Voice Navigation</h2>
+      <p>Speak to quickly navigate through our store!</p>
+      <button id="voice-nav-btn" class="btn btn-dark">🎤 Start Voice Command</button>
+      <p id="voice-status" style="margin-top: 10px;"></p>
+    </div>
   </div>
 </section>
+
 
     <!-- exclusive -->
     <section>
@@ -443,9 +474,6 @@
 <div id="estimator-float-btn">
   <button id="size-estimator-btn" title="Estimate My Size">📏</button>
 </div>
-
-
-
 
     <!-- Chatbot Toggle Button -->
 <div id="chatbot-container">

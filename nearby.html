@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nearby Boutiques – Free Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Google Font + Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <script src="js/voice-nav.js"></script>
+
+  <style>
+    :root {
+      --primary: #8e44ad;
+      --accent: #f7f1ff;
+      --bg-light: linear-gradient(to right, #f9f3ff, #e5d6f9);
+      --bg-dark: #1f1f1f;
+      --card-dark: #2a2a2a;
+      --text-dark: #e0e0e0;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Urbanist', sans-serif;
+      background: var(--bg-light);
+      color: #904444;
+      transition: background 0.3s, color 0.3s;
+      font-size: 18px;
+    }
+
+    h2 {
+      text-align: center;
+      font-weight: 700;
+      font-size: 2.2rem;
+      color: var(--primary);
+      margin-top: 20px;
+    }
+
+    p {
+      text-align: center;
+      font-size: 1.1rem;
+      margin: 8px 0 20px;
+    }
+
+    #map {
+      height: 400px;
+      width: 90%;
+      margin: 0 auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 2px solid var(--primary);
+    }
+
+    #controls {
+      text-align: center;
+      margin: 20px auto;
+    }
+
+    .filter-toggle {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 30px;
+      margin: 0 10px;
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+
+    .filter-toggle.off {
+      background-color: #ccc;
+      color: #444;
+    }
+
+    body.dark .filter-toggle.off {
+      background-color: #444;
+      color: #aaa;
+    }
+
+   #boutique-list {
+  width: 90%;
+  max-width: 1200px;
+  margin: 30px auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.bubble-card {
+  background: linear-gradient(135deg, #ffe0f0, #f9f0ff);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+  font-size: 1.05rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #f3c3e8;
+}
+
+.bubble-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.03);
+}
+
+.bubble-card strong {
+  color: #8e44ad;
+  font-size: 1.2rem;
+}
+
+.bubble-card i {
+  color: #555;
+  margin-right: 8px;
+}
+
+    .loader {
+      text-align: center;
+      font-size: 1.3rem;
+      margin: 30px 0;
+    }
+
+    @media (max-width: 768px) {
+      #map, #boutique-list {
+        width: 95%;
+      }
+
+      .filter-toggle.off {
+        background-color: #ccc;
+  color: #444;
+      }
+
+      .bubble-card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h2>📍 Boutiques Near You</h2>
+<p>Click on the map to set your location manually</p>
+
+<div id="controls">
+  <span id="openFilter" class="filter-toggle off">Open Now</span>
+  <span id="deliveryFilter" class="filter-toggle off">Delivery Available</span>
+</div>
+
+<div id="map"></div>
+<div id="boutique-list" class="loader">🔄 Waiting for location...</div>
+
+<script>
+  const map = L.map('map').setView([12.9300, 80.1350], 14);
+  let userMarker;
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  function setUserLocation(lat, lng) {
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.marker([lat, lng], { draggable: true }).addTo(map)
+      .bindPopup("📍 Your Location")
+      .openPopup();
+    map.setView([lat, lng], 15);
+    fetchNearbyShops(lat, lng);
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => setUserLocation(pos.coords.latitude, pos.coords.longitude),
+      () => alert("Enable location or click on the map to set manually.")
+    );
+  }
+
+  map.on("click", e => setUserLocation(e.latlng.lat, e.latlng.lng));
+
+  function fetchNearbyShops(userLat, userLng) {
+    const listDiv = document.getElementById("boutique-list");
+    listDiv.className = "loader";
+    listDiv.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Searching nearby boutiques...`;
+
+    const radius = 2000;
+    const query = `
+      [out:json];
+      (
+        node["shop"="clothes"](around:${radius},${userLat},${userLng});
+        node["shop"="boutique"](around:${radius},${userLat},${userLng});
+      );
+      out center;
+    `;
+
+    fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: query
+    })
+    .then(res => res.json())
+    .then(data => {
+      listDiv.className = "";
+      listDiv.innerHTML = "";
+
+      const openNow = !document.getElementById("openFilter").classList.contains("off");
+      const delivery = !document.getElementById("deliveryFilter").classList.contains("off");
+
+      const filtered = data.elements.filter(el => {
+        const simulateOpen = Math.random() > 0.3;
+        const simulateDelivery = Math.random() > 0.5;
+        el.simOpen = simulateOpen;
+        el.simDelivery = simulateDelivery;
+        return (!openNow || simulateOpen) && (!delivery || simulateDelivery);
+      });
+
+      if (filtered.length === 0) {
+        listDiv.innerHTML = "❌ No boutiques found in this location.";
+        return;
+      }
+
+      filtered.forEach(el => {
+        const name = el.tags.name || "Unnamed Boutique";
+        const distMeters = map.distance([userLat, userLng], [el.lat, el.lon]);
+        const distKm = (distMeters / 1000).toFixed(2);
+
+        const speed = 20, prep = 10, delay = Math.random() * 10 + 5, buffer = 5;
+        const travel = (distKm / speed) * 60;
+        const deliveryMins = Math.round(travel + prep + delay + buffer);
+
+        L.marker([el.lat, el.lon]).addTo(map).bindPopup(`🛍️ ${name}`);
+
+        const isNalli = name.toLowerCase().includes("nalli");
+const link = isNalli ? "nalli.html" : "#";
+
+listDiv.innerHTML += `
+  <a href="${link}" style="text-decoration: none; color: inherit;">
+    <div class="bubble-card">
+      <i class="fas fa-store"></i> <strong>${name}</strong><br>
+      <i class="fas fa-location-dot"></i> Distance: ${distKm} km<br>
+      <i class="fas fa-truck"></i> Est. Delivery: ${deliveryMins} mins<br>
+      <i class="fas ${el.simOpen ? 'fa-clock' : 'fa-clock-rotate-left'}"></i> ${el.simOpen ? "Open Now" : "Closed"}<br>
+      <i class="fas fa-motorcycle"></i> ${el.simDelivery ? "Delivery Available" : "No Delivery"}
+    </div>
+  </a>
+`;
+
+      });
+    })
+    .catch(() => {
+      listDiv.innerHTML = "⚠️ Error fetching boutiques.";
+    });
+  }
+
+  // Filter toggle logic
+  document.querySelectorAll('.filter-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('off');
+      if (userMarker) {
+        const { lat, lng } = userMarker.getLatLng();
+        fetchNearbyShops(lat, lng);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

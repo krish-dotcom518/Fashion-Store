@@ -1,0 +1,4895 @@
+index.js
+
+document.addEventListener('DOMContentLoaded', () => {
+  // ✅ Emotion-Based Personalization
+  const userEmotion = localStorage.getItem("userEmotion");
+
+  if (userEmotion) {
+    console.log("🧠 Detected emotion:", userEmotion);
+
+    const emotionBanner = document.getElementById("emotion-banner");
+    if (emotionBanner) {
+      emotionBanner.innerHTML = `Your mood seems <strong>${userEmotion.toUpperCase()}</strong> today! 💡<br>We've selected items to match your vibe.`;
+      emotionBanner.style.display = 'block';
+    }
+
+    const productArea = document.getElementById("product-area");
+    if (productArea) {
+      if (userEmotion === 'happy') {
+        productArea.classList.add('highlight-partywear');
+      } else if (userEmotion === 'sad') {
+        productArea.classList.add('highlight-comfy');
+      } else if (userEmotion === 'angry') {
+        productArea.classList.add('highlight-relax');
+      }
+    }
+  }
+
+  // ✅ Navbar Scroll Behavior
+  const navbar = document.getElementById('navbar');
+  let scrolled = false;
+
+  window.onscroll = function () {
+    if (window.pageYOffset > 40) {
+      navbar.classList.remove('top');
+      if (!scrolled) {
+        navbar.style.transform = 'translateY(-270px)';
+      }
+      setTimeout(() => {
+        navbar.style.transform = 'translateY(0)';
+        scrolled = true;
+      }, 200);
+    } else {
+      navbar.classList.add('top');
+      scrolled = false;
+    }
+  };
+
+  $('#navbar a, .btn').on('click', function (e) {
+    if (this.hash !== '') {
+      e.preventDefault();
+      const hash = this.hash;
+      $('html, body').animate({
+        scrollTop: $(hash).offset().top - 100,
+      }, 800);
+    }
+  });
+
+  // ✅ Hamburger
+  const hamburger = document.getElementById('hamburger');
+  const navUl = document.getElementById('nav-ul');
+  if (hamburger && navUl) {
+    hamburger.addEventListener('click', () => {
+      navUl.classList.toggle('show');
+    });
+  }
+
+  // ✅ Login/Register Toggle
+  const loginFrm = document.getElementById("loginFrm");
+  const regFrm = document.getElementById("regFrm");
+  const active = document.getElementById("active");
+
+  window.reg = function () {
+    if (regFrm && loginFrm && active) {
+      regFrm.style.transform = "translateX(0px)";
+      loginFrm.style.transform = "translateX(0px)";
+      active.style.transform = "translateX(100px)";
+    }
+  }
+
+  window.login = function () {
+    if (regFrm && loginFrm && active) {
+      regFrm.style.transform = "translateX(300px)";
+      loginFrm.style.transform = "translateX(300px)";
+      active.style.transform = "translateX(0px)";
+    }
+  }
+
+  // ✅ Chatbot Logic
+  const chatbotToggle = document.getElementById('chatbot-toggle');
+  const chatbox = document.getElementById('chatbox');
+  const userInput = document.getElementById('user-input');
+  const chatMessages = document.getElementById('chat-messages');
+  const closeChat = document.getElementById('close-chat');
+  const micBtn = document.getElementById('mic-button');
+  const statusBox = document.getElementById('chat-status');
+
+  if (chatbotToggle) {
+    chatbotToggle.addEventListener('click', () => {
+      chatbox.classList.toggle('hidden');
+    });
+  }
+
+  if (closeChat) {
+    closeChat.addEventListener('click', () => {
+      chatbox.classList.add('hidden');
+    });
+  }
+
+  async function botReply(message) {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+
+      if (response.status === 429) {
+        return "⚠️ You're out of AI usage quota. Please check billing.";
+      }
+
+      const data = await response.json();
+      return data.reply || "⚠️ No reply from the AI.";
+    } catch (err) {
+      console.error("Cohere error:", err);
+      return "⚠️ Sorry, I couldn’t connect to the AI server.";
+    }
+  }
+
+  if (userInput) {
+    userInput.addEventListener('keypress', async function (e) {
+      if (e.key === 'Enter') {
+        const msg = userInput.value.trim();
+        if (!msg) return;
+
+        chatMessages.innerHTML += `<div><strong>You:</strong> ${msg}</div>`;
+        userInput.value = '';
+
+        chatMessages.innerHTML += `<div><strong>Bot:</strong> <em>Typing...</em></div>`;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const reply = await botReply(msg);
+        const lastBotMsg = chatMessages.querySelector('div:last-child');
+        lastBotMsg.innerHTML = `<strong>Bot:</strong> ${reply}`;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        if (
+          reply.includes("out of AI") ||
+          reply.includes("No reply") ||
+          reply.includes("connect to the AI server")
+        ) {
+          userInput.disabled = true;
+          userInput.placeholder = "⚠️ AI temporarily unavailable";
+          userInput.style.backgroundColor = "#f5f5f5";
+          userInput.style.cursor = "not-allowed";
+        }
+      }
+    });
+  }
+
+  // ✅ Mic Button with Speech Recognition
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition && micBtn) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    micBtn.addEventListener('click', () => {
+      if (chatbox.classList.contains('hidden')) {
+        chatbox.classList.remove('hidden');
+      }
+
+      statusBox.innerText = "🎤 Listening...";
+      statusBox.style.display = 'block';
+      micBtn.innerText = '🗣️';
+      recognition.start();
+    });
+
+    recognition.onresult = (event) => {
+      const spokenText = event.results[0][0].transcript;
+      userInput.value = spokenText;
+      userInput.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter' }));
+    };
+
+    recognition.onend = () => {
+      statusBox.style.display = 'none';
+      micBtn.innerText = '🎤';
+    };
+
+    recognition.onerror = (event) => {
+      statusBox.innerText = "❌ Voice error: " + event.error;
+      setTimeout(() => (statusBox.style.display = 'none'), 2000);
+      micBtn.innerText = '🎤';
+    };
+  }
+
+  // ✅ AI Size Estimator Logic
+  const estimatorBtn = document.getElementById('size-estimator-btn');
+  const estimatorModal = document.getElementById('size-estimator-modal');
+  const submitEstimate = document.getElementById('submit-estimate');
+  const closeEstimator = document.getElementById('close-estimator');
+
+  if (estimatorBtn && estimatorModal) {
+    estimatorBtn.addEventListener('click', () => {
+      estimatorModal.style.display = 'flex';
+    });
+  }
+
+  if (closeEstimator && estimatorModal) {
+    closeEstimator.addEventListener('click', () => {
+      estimatorModal.style.display = 'none';
+    });
+  }
+
+  let detector;
+
+  async function loadDetector() {
+    detector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
+      runtime: 'mediapipe',
+      solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose',
+    });
+  }
+
+  loadDetector();
+
+  if (submitEstimate) {
+    submitEstimate.addEventListener('click', async () => {
+      const height = parseInt(document.getElementById('height').value);
+      const weight = parseInt(document.getElementById('weight').value);
+      const gender = document.getElementById('gender').value;
+      const resultBox = document.getElementById('size-result');
+      const fileInput = document.getElementById('photo');
+      const file = fileInput.files[0];
+
+      resultBox.innerText = '';
+      resultBox.innerHTML = `<span style="color: #243a6f;">
+        <span class="emoji-loader">⏳</span> Processing your image, please wait...
+      </span>`;
+      resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      if (!file) {
+        resultBox.innerHTML = `<span style="color: red;">❌ Please upload a photo to continue.</span>`;
+        return;
+      }
+
+      const image = new Image();
+      image.src = URL.createObjectURL(file);
+      await new Promise(resolve => (image.onload = resolve));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      const poses = await detector.estimatePoses(canvas);
+      if (!poses.length) {
+        resultBox.innerHTML = `<span style="color: red;">❌ Could not detect body in the image.</span>`;
+        return;
+      }
+
+      const keypoints = poses[0].keypoints;
+      const nose = keypoints.find(k => k.name === 'nose');
+      const ankle = keypoints.find(k => k.name === 'left_ankle') || keypoints.find(k => k.name === 'right_ankle');
+      const leftShoulder = keypoints.find(k => k.name === 'left_shoulder');
+      const rightShoulder = keypoints.find(k => k.name === 'right_shoulder');
+
+      if (!nose || !ankle || !leftShoulder || !rightShoulder) {
+        resultBox.innerHTML = `<span style="color: red;">❌ Full-body not visible. Please upload a clear photo.</span>`;
+        return;
+      }
+
+      const heightPixels = Math.abs(ankle.y - nose.y);
+      const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+
+      let size = 'S';
+      if (heightPixels < 250 || shoulderWidth < 80) size = 'M';
+      else if (heightPixels > 330 || shoulderWidth > 160) size = 'L';
+
+      resultBox.innerHTML = `<span style="color: green;">📸 Estimated Size: <strong>${size}</strong></span>`;
+    });
+  }
+});
+
+visual-search.js
+
+let model;
+const products = [
+  { name: 'Avante Tshirt', src: 'images/products/tshirt1.jpg' },
+  { name: 'Max bagpack', src: 'images/products/bag7.jpg' },
+  { name: 'volkso dress', src: 'images/products/dress2.jpg' },
+  { name: 'magisho fur dress', src: 'images/products/dress 3.jpg' },
+  { name: 'Jordan Air-2', src: 'images/products/jordan.jpg' },
+  { name: 'Chanel Perfume', src: 'images/products/chanel.jpg' },
+  { name: 'Gabbana Perfume', src: 'images/products/gabbana.jpg' },
+  { name: 'Puma Tshirt', src: 'images/products/tshirt6.jpg' },
+];
+
+async function loadModel() {
+  model = await mobilenet.load();
+  console.log("✅ MobileNet loaded");
+}
+
+async function getImageFeatures(img) {
+  const tensor = tf.browser.fromPixels(img).toFloat().expandDims();
+  return model.infer(tensor, true);
+}
+
+async function findSimilarProducts(userImg) {
+  const userFeature = await getImageFeatures(userImg);
+
+  const matches = await Promise.all(products.map(async (p) => {
+    const img = new Image();
+    img.src = p.src;
+    await new Promise((res) => (img.onload = res));
+    const feature = await getImageFeatures(img);
+    const distance = tf.norm(tf.sub(userFeature, feature)).dataSync()[0];
+    return { ...p, distance };
+  }));
+
+  return matches.sort((a, b) => a.distance - b.distance).slice(0, 4);
+}
+
+function showResults(matches) {
+  const results = document.getElementById("results");
+  results.innerHTML = "";
+  matches.forEach((match) => {
+    const col = document.createElement("div");
+    col.className = "column";
+    col.innerHTML = `
+      <img src="${match.src}" alt="${match.name}" />
+      <h4>${match.name}</h4>
+      <p>Similar Score: ${match.distance.toFixed(2)}</p>
+    `;
+    results.appendChild(col);
+  });
+}
+
+document.getElementById("upload").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const imgURL = URL.createObjectURL(file);
+  const userImg = document.getElementById("user-image");
+  userImg.src = imgURL;
+  userImg.hidden = false;
+
+  await new Promise((resolve) => (userImg.onload = resolve));
+  const matches = await findSimilarProducts(userImg);
+  showResults(matches);
+});
+
+loadModel();
+
+account.html
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+        integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="css/utility.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Products-FStore</title>
+</head>
+<!-- header -->
+
+<body>
+    
+    <!-- Header -->
+    <header id="home" class=" s-pro">
+
+        <div id="navbar" class="navbar top acc">
+            <div class="logo">
+                <h1><a href="index.html"><i class="fab fa-foursquare mob"></i></a><span class="mobs">FashionStore</span>
+                </h1>
+            </div>
+            <nav>
+                <button class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <ul class="nav-ul" id="nav-ul">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="product.html">Product</a></li>
+                    <li><a href="#">Inspiration</a></li>
+                    <li><a href="account.html">Account</a></li>
+                    <li><a href="cart.html" class="icon"><i class="fas fa-shopping-cart"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <!-- 💡 Stylish Visual Search Section -->
+<section class="visual-search-section">
+  <div class="vs-container">
+    <h2 class="vs-title">👗 Try Visual Search</h2>
+    <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
+    
+    <label class="vs-upload-btn">
+      Upload Outfit
+      <input type="file" id="upload" accept="image/*" hidden />
+    </label>
+
+    <br />
+    <img id="user-image" class="vs-preview" hidden />
+    <div id="results" class="vs-results"></div>
+  </div>
+</section>
+
+    <div class="account">
+        <div class="container">
+            <div class="row ">
+                <div class="col-2">
+                    <img src="images/fourth.png" width="100%">
+                </div>
+                <div class="col-2">
+                    <div class="form-container">
+                        <div class="form-btn">
+                            <span onclick="login()">Login</span>
+                            <span onclick="reg()">Register</span>
+                            <hr id="active">
+                        </div>
+                        <form action="#" id="loginFrm">
+                            <input type="text" placeholder="Username">
+                            <input type="password" placeholder="passwprd">
+                            <button type="submit" class="btn ">Login</button>
+                            <a href="#">Forgot password</a>
+                        </form>
+                        <form action="#" id="regFrm">
+                            <input type="text" placeholder="Username">
+                            <input type="email" placeholder="Email">
+                            <input type="password" placeholder="passwprd">
+                            <button type="submit" class="btn">Register</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- TensorFlow JS -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+<script src="js/visual-search.js"></script>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-left">
+            <img src="images/logo.jpeg" alt="">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
+            <div class="social">
+                <a href="#"><i class="fab fa-facebook fa-2x"></i></a>
+                <a href="#"><i class="fab fa-twitter fa-2x"></i></a>
+                <a href="#"><i class="fab fa-youtube fa-2x"></i></a>
+                <a href="#"><i class="fab fa-linkedin fa-2x"></i></a>
+            </div>
+        </div>
+
+        <ul class="footer-right">
+            <li>
+                <h3>Useful links</h3>
+
+                <ul class="box">
+                    <li><a href="#">Coupon</a></li>
+                    <li><a href="#">Join policy</a></li>
+                    <li><a href="#">Blog post</a></li>
+                    <li><a href="#">Inspiration</a></li>
+                    <li><a href="#">Account</a></li>
+                </ul>
+            </li>
+            <li class="feature">
+                <h3>Products</h3>
+
+                <ul class="box">
+                    <li><a href="#">Shoes</a></li>
+                    <li><a href="#">Shirts</a></li>
+                    <li><a href="#">Bag pack</a></li>
+                    <li><a href="#">Eyewear</a></li>
+                    <li><a href="#">Womens</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <h3>Address</h3>
+
+                <ul class="box">
+                    <li><a href="#">123,Cyber City</a></li>
+                    <li><a href="#">Sector 12</a></li>
+                    <li><a href="#">Gurugram, Haryana</a></li>
+                    <li><a href="#">112353</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="footer-bottom">
+            <p>All right reserved &copy; FashionStore 2020</p>
+        </div>
+    </footer>
+</section>
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js"
+        integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+    <script src="js/index.js"></script>
+    <!-- TensorFlow.js and BlazePose -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+
+    <!-- AI Size Estimator Floating Button -->
+<div id="estimator-float-btn">
+  <button id="size-estimator-btn" title="Estimate My Size">📏</button>
+</div>
+
+
+
+
+    <!-- Chatbot Toggle Button -->
+<div id="chatbot-container">
+  <!-- 💬 This is the chatbot icon toggle button -->
+  <button id="chatbot-toggle" title="Open Chatbot">💬</button>
+
+  <!-- Chatbox -->
+  <div id="chatbox" class="hidden">
+    <div id="chat-header">Your AI Assistant <span id="close-chat">×</span></div>
+    
+    <div id="chat-messages"></div>
+    
+    <div id="chat-input-wrapper">
+         <div id="chat-status" style="display: none;">🎤 Listening...</div>
+      <input type="text" id="user-input" placeholder="Type a message..." />
+      <button id="mic-button" title="Speak">🎤</button>
+    </div>
+  </div>
+</div>
+<!-- AI Size Estimator Modal -->
+<div id="size-estimator-modal">
+  <div class="estimator-modal-box wide">
+    <h3>👗 Estimate Your Perfect Fit</h3>
+    <p class="subtext">Get AI size suggestions tailored to you</p>
+
+    <div class="estimator-form-row">
+      <div class="form-group">
+        <label for="height">📏 Height (cm)<small>(optional)</small></label>
+        <input type="number" id="height" placeholder="e.g. 165" />
+      </div>
+
+      <div class="form-group">
+        <label for="weight">⚖️ Weight (kg)<small>(optional)</small></label>
+        <input type="number" id="weight" placeholder="e.g. 60" />
+      </div>
+
+      <div class="form-group">
+        <label for="gender">🧍 Gender</label>
+        <select id="gender">
+          <option value="">Select</option>
+          <option value="male">👨 Male</option>
+          <option value="female">👩 Female</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group full">
+      <label for="photo">📸 Upload a Photo <span style="color: red;">*</span></label>
+      <input type="file" id="photo" accept="image/*" required/>
+    </div>
+
+    <button id="submit-estimate">🎯 Get My Size</button>
+    <div id="size-result"></div>
+    <button id="close-estimator" class="close-btn">❌ Close</button>
+    <canvas id="preview-canvas" style="display: none;"></canvas>
+    <!-- Animated Loader (hidden by default) -->
+<div id="loader" style="display: none; font-size: 1.2rem; text-align: center;">
+  <span class="emoji-loader">⏳</span> Processing your image...
+</div>
+
+  </div>
+</div>
+
+
+
+</body>
+
+</html>
+
+aviator.html
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+        integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="css/utility.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Products-FStore</title>
+</head>
+<!-- header -->
+
+<body>
+    
+    <!-- Header -->
+    <header id="home" class="header s-pro">
+
+        <div id="navbar" class="navbar top">
+            <div class="logo">
+                <h1><a href="index.html"><i class="fab fa-foursquare mob"></i></a><span class="mobs">FashionStore</span>
+                </h1>
+            </div>
+            <nav>
+                <button class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <ul class="nav-ul" id="nav-ul">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="product.html">Product</a></li>
+                    <li><a href="">Inspiration</a></li>
+                    <li><a href="account.html">Account</a></li>
+                    <li><a href="cart.html" class="icon"><i class="fas fa-shopping-cart"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 💡 Stylish Visual Search Section -->
+<section class="visual-search-section">
+  <div class="vs-container">
+    <h2 class="vs-title">👗 Try Visual Search</h2>
+    <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
+    
+    <label class="vs-upload-btn">
+      Upload Outfit
+      <input type="file" id="upload" accept="image/*" hidden />
+    </label>
+
+    <br />
+    <img id="user-image" class="vs-preview" hidden />
+    <div id="results" class="vs-results"></div>
+  </div>
+</section>
+
+
+    <section class="s-product">
+        <div class="box">
+            <div class="row">
+                <div class="col-2">
+                    <img src="images/exclusive/aviator.webp" class="bg-4">
+                </div>
+                <div class="col-2">
+                    <h1>Specs - Lenskart</h1>
+                    <h4>&#x20B9;480.00 <strike>&nbsp; &#x20B9;960.00</strike></h4>
+                    <input type="number" value="1" max="10">
+                    <a href="" class="btn s-btn"> Add To Cart</a>
+
+                    <a href="tryon.html?spec=aviator" class="btn btn-dark" style="margin-left: 10px;">
+        Try It On <i class="fas fa-eye"></i>
+    </a>
+
+                    <h3>Product Details <i class="fas fa-indent"></i> </h3>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Doloremque quae error aut reprehenderit
+                        labore, odio natus!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="box">
+        <div class="row row-2">
+            <h2>Related Products</h2>
+            <p><a href="product.html">View more</a> <i class="fas fa-arrow-right"></i></p>
+        </div>
+    </div>
+
+    <section class="flex-grid section-padding">
+        <div class="row sort">
+            <div class="column">
+                <img src="images/products/flora.jpg" alt="">
+                <h4>Flores</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9;1109.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/marrell.jpg" alt="">
+                <h4>Marrell</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9;1599.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/chanel.jpg" alt="">
+                <h4>chanel</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                </div>
+                <p>&#x20B9;1350.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/gabbana.jpg" alt="">
+                <h4>Gabbanna</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 1890.99</p>
+            </div>
+    </section>
+
+
+
+    <!-- EXCLUSIVE -->
+    <section class="exclusive bg-1">
+        <div class="box">
+            <div class="row">
+                <div class="col-2">
+                    <img src="images/first.png" class="exc-img">
+                </div>
+                <div class="col-2">
+                    <h1>Offer Zone</h1>
+                    <h2>50% OFF ON SELECTED ITEM</h2>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
+                    <a href="" class="btn btn-dark">Buy Now <i class="fas fa-chevron-right"></i> </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   
+
+<!-- TensorFlow JS -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+<script src="js/visual-search.js"></script>
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-left">
+            <img src="images/logo.jpeg" alt="">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
+            <div class="social">
+                <a href="#"><i class="fab fa-facebook fa-2x"></i></a>
+                <a href="#"><i class="fab fa-twitter fa-2x"></i></a>
+                <a href="#"><i class="fab fa-youtube fa-2x"></i></a>
+                <a href="#"><i class="fab fa-linkedin fa-2x"></i></a>
+            </div>
+        </div>
+
+        <ul class="footer-right">
+            <li>
+                <h3>Useful links</h3>
+
+                <ul class="box">
+                    <li><a href="#">Coupon</a></li>
+                    <li><a href="#">Join policy</a></li>
+                    <li><a href="#">Blog post</a></li>
+                    <li><a href="#">Inspiration</a></li>
+                    <li><a href="#">Account</a></li>
+                </ul>
+            </li>
+            <li class="feature">
+                <h3>Products</h3>
+
+                <ul class="box">
+                    <li><a href="#">Shoes</a></li>
+                    <li><a href="#">Shirts</a></li>
+                    <li><a href="#">Bag pack</a></li>
+                    <li><a href="#">Eyewear</a></li>
+                    <li><a href="#">Womens</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <h3>Address</h3>
+
+                <ul class="box">
+                    <li><a href="#">123,Cyber City</a></li>
+                    <li><a href="#">Sector 12</a></li>
+                    <li><a href="#">Gurugram, Haryana</a></li>
+                    <li><a href="#">112353</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="footer-bottom">
+            <p>All right reserved &copy; FashionStore 2020</p>
+        </div>
+    </footer>
+
+
+    </section>
+
+
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js"
+        integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+    <script src="js/index.js"></script>
+    <!-- TensorFlow.js and BlazePose -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+
+    <!-- AI Size Estimator Floating Button -->
+<div id="estimator-float-btn">
+  <button id="size-estimator-btn" title="Estimate My Size">📏</button>
+</div>
+<!-- Chatbot Toggle Button -->
+<div id="chatbot-container">
+  <!-- 💬 This is the chatbot icon toggle button -->
+  <button id="chatbot-toggle" title="Open Chatbot">💬</button>
+
+  <!-- Chatbox -->
+  <div id="chatbox" class="hidden">
+    <div id="chat-header">Your AI Assistant <span id="close-chat">×</span></div>
+     
+    <div id="chat-messages"></div>
+    
+    <div id="chat-input-wrapper">
+        <div id="chat-status" style="display: none;">🎤 Listening...</div>
+      <input type="text" id="user-input" placeholder="Type a message..." />
+      <button id="mic-button" title="Speak">🎤</button>
+    </div>
+  </div>
+</div>
+<!-- AI Size Estimator Modal -->
+<div id="size-estimator-modal">
+  <div class="estimator-modal-box wide">
+    <h3>👗 Estimate Your Perfect Fit</h3>
+    <p class="subtext">Get AI size suggestions tailored to you</p>
+
+    <div class="estimator-form-row">
+      <div class="form-group">
+        <label for="height">📏 Height (cm)<small>(optional)</small></label>
+        <input type="number" id="height" placeholder="e.g. 165" />
+      </div>
+
+      <div class="form-group">
+        <label for="weight">⚖️ Weight (kg)<small>(optional)</small></label>
+        <input type="number" id="weight" placeholder="e.g. 60" />
+      </div>
+
+      <div class="form-group">
+        <label for="gender">🧍 Gender</label>
+        <select id="gender">
+          <option value="">Select</option>
+          <option value="male">👨 Male</option>
+          <option value="female">👩 Female</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group full">
+      <label for="photo">📸 Upload a Photo<span style="color: red;">*</span></label>
+      <input type="file" id="photo" accept="image/*" required/>
+    </div>
+
+    <button id="submit-estimate">🎯 Get My Size</button>
+    <div id="size-result"></div>
+    <button id="close-estimator" class="close-btn">❌ Close</button>
+    <canvas id="preview-canvas" style="display: none;"></canvas>
+    <!-- Animated Loader (hidden by default) -->
+<div id="loader" style="display: none; font-size: 1.2rem; text-align: center;">
+  <span class="emoji-loader">⏳</span> Processing your image...
+</div>
+  </div>
+</div>
+
+</body>
+
+</html>
+
+cart.html
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+        integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="css/utility.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Products-FStore</title>
+</head>
+<!-- header -->
+
+<body>
+    <!-- Header -->
+    <header id="home" class="header s-pro">
+
+        <div id="navbar" class="navbar top">
+            <div class="logo">
+                <h1><a href="index.html"><i class="fab fa-foursquare mob"></i></a><span class="mobs">FashionStore</span>
+                </h1>
+            </div>
+            <nav>
+                <button class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <ul class="nav-ul" id="nav-ul">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="product.html">Product</a></li>
+                    <li><a href="inspire.html">Inspiration</a></li>
+                    <li><a href="account.html">Account</a></li>
+                    <li><a href="cart.html" class="icon"><i class="fas fa-shopping-cart"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 💡 Stylish Visual Search Section -->
+<section class="visual-search-section">
+  <div class="vs-container">
+    <h2 class="vs-title">👗 Try Visual Search</h2>
+    <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
+    
+    <label class="vs-upload-btn">
+      Upload Outfit
+      <input type="file" id="upload" accept="image/*" hidden />
+    </label>
+
+    <br />
+    <img id="user-image" class="vs-preview" hidden />
+    <div id="results" class="vs-results"></div>
+  </div>
+</section>
+
+    <!-- CART -->
+    <div class="box cart">
+        <table>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+            </tr>
+            <tr>
+                <td>
+                    <div class="cart-info">
+                        <img src="images/products/chanel.jpg" alt="">
+                        <div>
+                            <p>Chanel Perfume</p>
+                            <small> price: &#x20B9 1350.00 </small>
+                            <br> <a href="#">Remove</a>
+                        </div>
+                    </div>
+                </td>
+                <td><input type="number" value="1"></td>
+                <td>&#x20B9 1350.00 </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="cart-info">
+                        <img src="images/products/gabbana.jpg" alt="">
+                        <div>
+                            <p>Gabbana Perfume</p>
+                            <small> price: &#x20B9 1890.99 </small>
+                            <br> <a href="#">Remove</a>
+                        </div>
+                    </div>
+                </td>
+                <td><input type="number" value="1"></td>
+                <td>&#x20B9 1890.99 </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="cart-info">
+                        <img src="images/products/jordan.jpg" alt="">
+                        <div>
+                            <p>Jordan air-2
+                            </p>
+                            <small> price: &#x20B9 6299.00 </small>
+                            <br> <a href="#">Remove</a>
+                        </div>
+                    </div>
+                </td>
+                <td><input type="number" value="1"></td>
+                <td>&#x20B9 6299.00 </td>
+            </tr>
+        </table>
+
+
+        <div class="total-price">
+            <table>
+                <tr>
+                    <td>Subtotal</td>
+                    <td>&#x20B9 9539.99 </td>
+                </tr>
+                <tr>
+                    <td>Tax</td>
+                    <td>&#x20B9 49.95 </td>
+                </tr>
+                <tr>
+                    <td>Total</td>
+                    <td>&#x20B9 9589.94 </td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+
+ 
+
+<!-- TensorFlow JS -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+<script src="js/visual-search.js"></script>
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-left">
+            <img src="images/logo.jpeg" alt="">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
+            <div class="social">
+                <a href="#"><i class="fab fa-facebook fa-2x"></i></a>
+                <a href="#"><i class="fab fa-twitter fa-2x"></i></a>
+                <a href="#"><i class="fab fa-youtube fa-2x"></i></a>
+                <a href="#"><i class="fab fa-linkedin fa-2x"></i></a>
+            </div>
+        </div>
+
+        <ul class="footer-right">
+            <li>
+                <h3>Useful links</h3>
+
+                <ul class="box">
+                    <li><a href="#">Coupon</a></li>
+                    <li><a href="#">Join policy</a></li>
+                    <li><a href="#">Blog post</a></li>
+                    <li><a href="#">Inspiration</a></li>
+                    <li><a href="#">Account</a></li>
+                </ul>
+            </li>
+            <li class="feature">
+                <h3>Products</h3>
+
+                <ul class="box">
+                    <li><a href="#">Shoes</a></li>
+                    <li><a href="#">Shirts</a></li>
+                    <li><a href="#">Bag pack</a></li>
+                    <li><a href="#">Eyewear</a></li>
+                    <li><a href="#">Womens</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <h3>Address</h3>
+
+                <ul class="box">
+                    <li><a href="#">123,Cyber City</a></li>
+                    <li><a href="#">Sector 12</a></li>
+                    <li><a href="#">Gurugram, Haryana</a></li>
+                    <li><a href="#">112353</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="footer-bottom">
+            <p>All right reserved &copy; FashionStore 2020</p>
+        </div>
+    </footer>
+
+
+    </section>
+
+
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js"
+        integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+    <script src="js/index.js"></script>
+
+    <!-- AI Size Estimator Floating Button -->
+<div id="estimator-float-btn">
+  <button id="size-estimator-btn" title="Estimate My Size">📏</button>
+</div>
+
+
+
+
+    <!-- Chatbot Toggle Button -->
+<div id="chatbot-container">
+  <!-- 💬 This is the chatbot icon toggle button -->
+  <button id="chatbot-toggle" title="Open Chatbot">💬</button>
+
+  <!-- Chatbox -->
+  <div id="chatbox" class="hidden">
+    <div id="chat-header">Your AI Assistant <span id="close-chat">×</span></div>
+     
+    <div id="chat-messages"></div>
+    
+    <div id="chat-input-wrapper">
+        <div id="chat-status" style="display: none;">🎤 Listening...</div>
+      <input type="text" id="user-input" placeholder="Type a message..." />
+      <button id="mic-button" title="Speak">🎤</button>
+    </div>
+  </div>
+</div>
+<!-- AI Size Estimator Modal -->
+<div id="size-estimator-modal">
+  <div class="estimator-modal-box wide">
+    <h3>👗 Estimate Your Perfect Fit</h3>
+    <p class="subtext">Get AI size suggestions tailored to you</p>
+
+    <div class="estimator-form-row">
+      <div class="form-group">
+        <label for="height">📏 Height (cm)<small>(optional)</small></label>
+        <input type="number" id="height" placeholder="e.g. 165" />
+      </div>
+
+      <div class="form-group">
+        <label for="weight">⚖️ Weight (kg)<small>(optional)</small></label>
+        <input type="number" id="weight" placeholder="e.g. 60" />
+      </div>
+
+      <div class="form-group">
+        <label for="gender">🧍 Gender</label>
+        <select id="gender">
+          <option value="">Select</option>
+          <option value="male">👨 Male</option>
+          <option value="female">👩 Female</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group full">
+      <label for="photo">📸 Upload a Photo<span style="color: red;">*</span></label>
+      <input type="file" id="photo" accept="image/*" required/>
+    </div>
+
+    <button id="submit-estimate">🎯 Get My Size</button>
+    <div id="size-result"></div>
+    <button id="close-estimator" class="close-btn">❌ Close</button>
+    <canvas id="preview-canvas" style="display: none;"></canvas>
+    <!-- Animated Loader (hidden by default) -->
+<div id="loader" style="display: none; font-size: 1.2rem; text-align: center;">
+  <span class="emoji-loader">⏳</span> Processing your image...
+</div>
+  </div>
+</div>
+
+</body>
+
+</html>
+
+index.html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+        integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="css/utility.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>FStore</title>>
+</head>
+<!-- header -->
+
+<body>
+    <!-- Header -->
+    <header id="home" class="header">
+
+        <div id="navbar" class="navbar top">
+            <div class="logo">
+                <h1><a href="index.html"><i class="fab fa-foursquare mob"></i></a><span class="mobs">FashionStore</span>
+                </h1>
+            </div>
+            <nav>
+                <button class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <ul class="nav-ul" id="nav-ul">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="product.html">Product</a></li>
+                    <li><a href="">Inspiration</a></li>
+                    <li><a href="account.html">Account</a></li>
+                    <li><a href="cart.html" class="icon"><i class="fas fa-shopping-cart"></i></a></li>
+                </ul>
+            </nav>
+
+        </div>
+        <div class="row">
+            <div class="col-2">
+                <h1>THIS WINTER</h1>
+                <h2>Get Yourself a new style</h2>
+                <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
+                <a href="product.html" class="btn">Explore more <i class="fas fa-chevron-right"></i> </a>
+            </div>
+            <div class="col-2">
+                <img src="images/first.png" alt="">
+            </div>
+        </div>
+    </header>
+
+      <!-- 💡 Stylish Visual Search Section -->
+<section class="visual-search-section">
+  <div class="vs-container">
+    <h2 class="vs-title">👗 Try Visual Search</h2>
+    <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
+    
+    <label class="vs-upload-btn">
+      Upload Outfit
+      <input type="file" id="upload" accept="image/*" hidden />
+    </label>
+
+    <br />
+    <img id="user-image" class="vs-preview" hidden />
+    <div id="results" class="vs-results"></div>
+  </div>
+</section>
+
+    <!-- exclusive -->
+    <section>
+        <section class="exclusive bg-2">
+            <div class="box">
+                <div class="row">
+                    <div class="col-2">
+                        <img src="images/exclusive/aviator.png" class="exc-img">
+                    </div>
+                    <div class="col-2">
+                        <h1>Latest Arrivals</h1>
+                        <a href="aviator.html" class="btn btn-dark">Buy Now <i class="fas fa-chevron-right"></i> </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured models -->
+        <section class="flex-grid section-padding">
+            <div class="row box">
+                <div class="column"> <img src="images/model/model1.jpg" alt=""> </div>
+                <div class="column"> <img src="images/model/model2.jpg" alt=""> </div>
+                <div class="column"> <img src="images/model/model3.jpg" alt=""> </div>
+                <div class="column"> <img src="images/model/model4.jpg" alt=""> </div>
+            </div>
+        </section>
+
+        <!-- feature product -->
+        <section class="flex-grid section-padding">
+            <h2 class="title">Featured Products</h2>
+            <div class="row box">
+                <div class="column">
+                    <div class="box-mg">
+                        <img src="images/products/tshirt1.jpg" alt="">
+                    </div>
+                    <h4>Avante Tshirt</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9;499.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/bag7.jpg" alt="">
+                    <h4>Max bagpack</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9;599.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/dress2.jpg" alt="">
+                    <h4>volkso dress</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p>&#x20B9;2499.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/dress 3.jpg" alt="">
+                    <h4>magisho fur dress</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9; 3499.00</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Latest product -->
+        <section class="flex-grid section-padding">
+            <h2 class="title">Latest Arrivals</h2>
+            <div class="row box">
+                <div class="column">
+                    <img src="images/products/tshirt6.jpg" alt="">
+                    <h4>Puma Tshirt</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9;499.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/tshirt5.jpg" alt="">
+                    <h4>Puma tshirt</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9;1599.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/tshirt7.jpg" alt="">
+                    <h4>MeTrouser</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p>&#x20B9;499.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/shoe10.jpg" alt="">
+                    <h4>Hrx shoe</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9; 3499.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/product-8.jpg" alt="">
+                    <h4>magisho Watch</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9; 1099.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/pant2.jpg" alt="">
+                    <h4>Trouser </h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9; 699.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/product-7.jpg" alt="">
+                    <h4>Hrx Socks</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9; 199.00</p>
+                </div>
+                <div class="column">
+                    <img src="images/products/product-9.jpg" alt="">
+                    <h4>Analoge watch</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>&#x20B9; 399.00</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXCLUSIVE ARRIVALS -->
+        <section class="exclusive bg-1">
+            <div class="box">
+                <div class="row">
+                    <div class="col-2">
+                        <img src="images/exclusive/second.png" class="exc-img">
+                    </div>
+                    <div class="col-2">
+                        <h1>Latest Arrivals</h1>
+                        <h2><span>Jordan</span> Air-2</h2>
+                        <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
+                        <a href="" class="btn btn-dark">Buy Now <i class="fas fa-chevron-right"></i> </a>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIOMONIAL -->
+        <section class="testimony section-padding">
+            <div class="row box">
+                <div class="column">
+                    <img src="images/user-1.jpg" alt="">
+                    <h4>Andrew johnson</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p> Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                    </p>
+                </div>
+                <div class="column">
+                    <img src="images/user-2.jpg" alt="">
+                    <h4>Amanda White</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                </div>
+                <div class="column">
+                    <img src="images/user-3.jpg" alt="">
+                    <h4>Chloe carmen</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                </div>
+                <div class="column">
+                    <img src="images/user-4.jpg" alt="">
+                    <h4>Brad miser</h4>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- EXCLUSIVE -->
+        <section class="exclusive bg-3">
+            <div class="box">
+                <div class="row">
+                    <div class="col-2">
+                        <img src="images/exclusive/avaitor2.png" class="exc-img">
+                    </div>
+                    <div class="col-2">
+                        <h1>Latest Arrivals</h1>
+                        <h2><span>Rayban</span> Surfer</h2>
+                        <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
+                        <a href="" class="btn btn-dark">Buy Now <i class="fas fa-chevron-right"></i> </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BRANDS -->
+        <section class="brands">
+            <div class="row box">
+                <div class="col-5">
+                    <img src="images/logo-paypal.png" alt="">
+                </div>
+                <div class="col-5">
+                    <img src="images/logo-philips.png" alt="">
+                </div>
+                <div class="col-5">
+                    <img src="images/logo-godrej.png" alt="">
+                </div>
+                <div class="col-5">
+                    <img src="images/logo-oppo.png" alt="">
+                </div>
+                <div class="col-5">
+                    <img src="images/logo-coca-cola.png" alt="">
+                </div>
+            </div>
+        </section>
+
+      
+
+<!-- TensorFlow JS -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+<script src="js/visual-search.js"></script>
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="footer-left">
+                <img src="images/logo.jpeg" alt="">
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
+                <div class="social">
+                    <a href="#"><i class="fab fa-facebook fa-2x"></i></a>
+                    <a href="#"><i class="fab fa-twitter fa-2x"></i></a>
+                    <a href="#"><i class="fab fa-youtube fa-2x"></i></a>
+                    <a href="#"><i class="fab fa-linkedin fa-2x"></i></a>
+                </div>
+            </div>
+
+            <ul class="footer-right">
+                <li>
+                    <h3>Useful links</h3>
+
+                    <ul class="box">
+                        <li><a href="#">Coupon</a></li>
+                        <li><a href="#">Join policy</a></li>
+                        <li><a href="#">Blog post</a></li>
+                        <li><a href="#">Inspiration</a></li>
+                        <li><a href="#">Account</a></li>
+                    </ul>
+                </li>
+                <li class="feature">
+                    <h3>Products</h3>
+
+                    <ul class="box">
+                        <li><a href="#">Shoes</a></li>
+                        <li><a href="#">Shirts</a></li>
+                        <li><a href="#">Bag pack</a></li>
+                        <li><a href="#">Eyewear</a></li>
+                        <li><a href="#">Womens</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <h3>Address</h3>
+
+                    <ul class="box">
+                        <li><a href="#">123,Cyber City</a></li>
+                        <li><a href="#">Sector 12</a></li>
+                        <li><a href="#">Gurugram, Haryana</a></li>
+                        <li><a href="#">112353</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="footer-bottom">
+                <p>All right reserved &copy; FashionStore 2020</p>
+            </div>
+        </footer>
+
+
+    </section>
+ <script src="https://code.jquery.com/jquery-3.5.0.min.js"
+        integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+    <script src="js/index.js"></script>
+
+    <!-- TensorFlow.js and BlazePose -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+
+
+    <!-- AI Size Estimator Floating Button -->
+<div id="estimator-float-btn">
+  <button id="size-estimator-btn" title="Estimate My Size">📏</button>
+</div>
+
+
+
+
+    <!-- Chatbot Toggle Button -->
+<div id="chatbot-container">
+  <!-- 💬 This is the chatbot icon toggle button -->
+  <button id="chatbot-toggle" title="Open Chatbot">💬</button>
+
+  <!-- Chatbox -->
+  <div id="chatbox" class="hidden">
+    <div id="chat-header">Your AI Assistant <span id="close-chat">×</span></div>
+     
+    <div id="chat-messages"></div>
+    
+    <div id="chat-input-wrapper">
+        <div id="chat-status" style="display: none;">🎤 Listening...</div>
+      <input type="text" id="user-input" placeholder="Type a message..." />
+      <button id="mic-button" title="Speak">🎤</button>
+    </div>
+  </div>
+</div>
+<!-- AI Size Estimator Modal -->
+<div id="size-estimator-modal">
+  <div class="estimator-modal-box wide">
+    <h3>👗 Estimate Your Perfect Fit</h3>
+    <p class="subtext">Get AI size suggestions tailored to you</p>
+
+    <div class="estimator-form-row">
+      <div class="form-group">
+        <label for="height">📏 Height (cm)<small>(optional)</small></label>
+        <input type="number" id="height" placeholder="e.g. 165" />
+      </div>
+
+      <div class="form-group">
+        <label for="weight">⚖️ Weight (kg)<small>(optional)</small></label>
+        <input type="number" id="weight" placeholder="e.g. 60" />
+      </div>
+
+      <div class="form-group">
+        <label for="gender">🧍 Gender</label>
+        <select id="gender">
+          <option value="">Select</option>
+          <option value="male">👨 Male</option>
+          <option value="female">👩 Female</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group full">
+      <label for="photo">📸 Upload a Photo<span style="color: red;">*</span></label>
+      <input type="file" id="photo" accept="image/*" required/>
+    </div>
+
+    <button id="submit-estimate">🎯 Get My Size</button>
+    <div id="size-result"></div>
+    <button id="close-estimator" class="close-btn">❌ Close</button>
+    <canvas id="preview-canvas" style="display: none;"></canvas>
+    <!-- Animated Loader (hidden by default) -->
+<div id="loader" style="display: none; font-size: 1.2rem; text-align: center;">
+  <span class="emoji-loader">⏳</span> Processing your image...
+</div>
+  </div>
+</div>
+
+
+</body>
+
+</html>
+
+product-2.html
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+        integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="css/utility.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Products-FStore</title>
+</head>
+<!-- header -->
+
+<body>
+    <!-- Header -->
+    <header id="home" class="header">
+
+        <div id="navbar" class="navbar top">
+            <div class="logo">
+                <h1><a href="index.html"><i class="fab fa-foursquare mob"></i></a><span class="mobs">FashionStore</span>
+                </h1>
+            </div>
+            <nav>
+                <button class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <ul class="nav-ul" id="nav-ul">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="product.html">Product</a></li>
+                    <li><a href="inspire.html">Inspiration</a></li>
+                    <li><a href="account.html">Account</a></li>
+                    <li><a href="cart.html" class="icon"><i class="fas fa-shopping-cart"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+        <div class="row">
+            <div class="col-2">
+                <h1>Latest Arrivals</h1>
+                <h2>Amazefit</h2>
+                <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
+                <a href="" class="btn btn-dark">Buy Now <i class="fas fa-chevron-right"></i> </a>
+            </div>
+            <div class="col-2">
+                <img src="images/exclusive/apple-watch.png" alt="">
+            </div>
+        </div>
+    </header>
+
+    <!-- 💡 Stylish Visual Search Section -->
+<section class="visual-search-section">
+  <div class="vs-container">
+    <h2 class="vs-title">👗 Try Visual Search</h2>
+    <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
+    
+    <label class="vs-upload-btn">
+      Upload Outfit
+      <input type="file" id="upload" accept="image/*" hidden />
+    </label>
+
+    <br />
+    <img id="user-image" class="vs-preview" hidden />
+    <div id="results" class="vs-results"></div>
+  </div>
+</section>
+
+
+    <section class="flex-grid section-padding">
+        <div class="row sort">
+            <h2>All Products</h2>
+            <select name="" id="">
+                <option>Default Shorting</option>
+                <option>Short by Price</option>
+                <option>Short by Popularity</option>
+                <option>Short by Rating</option>
+                <option>Short by sale</option>
+            </select>
+        </div>
+        <div class="row box">
+            <div class="column">
+                <img src="images/products/jordan.jpg" alt="">
+                <h4>Jordan air-2</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                </div>
+                <p>&#x20B9;6299.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/vans.jpg" alt="">
+                <h4>Vans</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 1199.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/nike.jpg" alt="">
+                <h4>Nike</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 4399.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/rainbow.jpg" alt="">
+                <h4>Rainbow sandal</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fa-star-half-alt fa-star"></i>
+                </div>
+                <p>&#x20B9; 1999.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/flora.jpg" alt="">
+                <h4>Flores</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9;1109.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/marrell.jpg" alt="">
+                <h4>Marrell</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9;1599.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/chanel.jpg" alt="">
+                <h4>chanel</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                </div>
+                <p>&#x20B9;1350.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/gabbana.jpg" alt="">
+                <h4>Gabbanna</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 1890.99</p>
+            </div>
+            <div class="column">
+                <img src="images/products/florebag.jpg" alt="">
+                <h4>rampt</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 1099.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/purse.jpg" alt="">
+                <h4>loafs </h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 1656.00</p>
+            </div>
+            <div class="column">
+                <div class="box-mg">
+                    <img src="images/products/brownbag.jpg" alt="">
+                </div>
+                <h4>Maxx bagpack</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star-half-alt"></i>
+                </div>
+                <p>&#x20B9;799.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/bag7.jpg" alt="">
+                <h4>Roadster bagpack</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9;459.00</p>
+            </div>
+
+        </div>
+        <div class="page-btn">
+            <a href="product.html">1</a>
+            <a href="#">2</a>
+            <a href="#">3</a>
+            <a href="#">4</a>
+            <a href="#"><i class="fas fa-chevron-right"></i> </a>
+        </div>
+
+    </section>
+
+
+
+    <!-- EXCLUSIVE -->
+    <section class="exclusive bg-2">
+        <div class="box">
+            <div class="row">
+                <div class="col-2">
+                    <img src="images/fourth.png" class="exc-img">
+                </div>
+                <div class="col-2">
+                    <h1>Offer Zone</h1>
+                    <h2>50% OFF ON SELECTED ITEM</h2>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
+                    <a href="" class="btn btn-dark">Buy Now <i class="fas fa-chevron-right"></i> </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+
+<!-- TensorFlow JS -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+<script src="js/visual-search.js"></script>
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-left">
+            <img src="images/logo.jpeg" alt="">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
+            <div class="social">
+                <a href="#"><i class="fab fa-facebook fa-2x"></i></a>
+                <a href="#"><i class="fab fa-twitter fa-2x"></i></a>
+                <a href="#"><i class="fab fa-youtube fa-2x"></i></a>
+                <a href="#"><i class="fab fa-linkedin fa-2x"></i></a>
+            </div>
+        </div>
+
+        <ul class="footer-right">
+            <li>
+                <h3>Useful links</h3>
+
+                <ul class="box">
+                    <li><a href="#">Coupon</a></li>
+                    <li><a href="#">Join policy</a></li>
+                    <li><a href="#">Blog post</a></li>
+                    <li><a href="#">Inspiration</a></li>
+                    <li><a href="#">Account</a></li>
+                </ul>
+            </li>
+            <li class="feature">
+                <h3>Products</h3>
+
+                <ul class="box">
+                    <li><a href="#">Shoes</a></li>
+                    <li><a href="#">Shirts</a></li>
+                    <li><a href="#">Bag pack</a></li>
+                    <li><a href="#">Eyewear</a></li>
+                    <li><a href="#">Womens</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <h3>Address</h3>
+
+                <ul class="box">
+                    <li><a href="#">123,Cyber City</a></li>
+                    <li><a href="#">Sector 12</a></li>
+                    <li><a href="#">Gurugram, Haryana</a></li>
+                    <li><a href="#">112353</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="footer-bottom">
+            <p>All right reserved &copy; FashionStore 2020</p>
+        </div>
+    </footer>
+
+
+    </section>
+
+
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js"
+        integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+    <script src="js/index.js"></script>
+    <!-- TensorFlow.js and BlazePose -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+
+   <!-- AI Size Estimator Floating Button -->
+<div id="estimator-float-btn">
+  <button id="size-estimator-btn" title="Estimate My Size">📏</button>
+</div>
+
+
+    <!-- Chatbot Toggle Button -->
+<div id="chatbot-container">
+  <!-- 💬 This is the chatbot icon toggle button -->
+  <button id="chatbot-toggle" title="Open Chatbot">💬</button>
+
+  <!-- Chatbox -->
+  <div id="chatbox" class="hidden">
+    <div id="chat-header">Your AI Assistant <span id="close-chat">×</span></div>
+     
+    <div id="chat-messages"></div>
+    
+    <div id="chat-input-wrapper">
+        <div id="chat-status" style="display: none;">🎤 Listening...</div>
+      <input type="text" id="user-input" placeholder="Type a message..." />
+      <button id="mic-button" title="Speak">🎤</button>
+    </div>
+  </div>
+</div>
+<!-- AI Size Estimator Modal -->
+<div id="size-estimator-modal">
+  <div class="estimator-modal-box wide">
+    <h3>👗 Estimate Your Perfect Fit</h3>
+    <p class="subtext">Get AI size suggestions tailored to you</p>
+
+    <div class="estimator-form-row">
+      <div class="form-group">
+        <label for="height">📏 Height (cm)<small>(optional)</small></label>
+        <input type="number" id="height" placeholder="e.g. 165" />
+      </div>
+
+      <div class="form-group">
+        <label for="weight">⚖️ Weight (kg)<small>(optional)</small></label>
+        <input type="number" id="weight" placeholder="e.g. 60" />
+      </div>
+
+      <div class="form-group">
+        <label for="gender">🧍 Gender</label>
+        <select id="gender">
+          <option value="">Select</option>
+          <option value="male">👨 Male</option>
+          <option value="female">👩 Female</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group full">
+      <label for="photo">📸 Upload a Photo<span style="color: red;">*</span></label>
+      <input type="file" id="photo" accept="image/*" required/>
+    </div>
+
+    <button id="submit-estimate">🎯 Get My Size</button>
+    <div id="size-result"></div>
+    <button id="close-estimator" class="close-btn">❌ Close</button>
+    <canvas id="preview-canvas" style="display: none;"></canvas>
+    <!-- Animated Loader (hidden by default) -->
+<div id="loader" style="display: none; font-size: 1.2rem; text-align: center;">
+  <span class="emoji-loader">⏳</span> Processing your image...
+</div>
+  </div>
+</div>
+
+</body>
+
+</html>
+
+product.html
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+        integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="css/utility.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Products-FStore</title>
+</head>
+<!-- header -->
+
+<body>
+    <!-- Header -->
+    <header id="home" class="header">
+
+        <div id="navbar" class="navbar top">
+            <div class="logo">
+                <h1><a href="index.html"><i class="fab fa-foursquare mob"></i></a><span class="mobs">FashionStore</span>
+                </h1>
+            </div>
+            <nav>
+                <button class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <ul class="nav-ul" id="nav-ul">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="product.html">Product</a></li>
+                    <li><a href="">Inspiration</a></li>
+                    <li><a href="account.html">Account</a></li>
+                    <li><a href="cart.html" class="icon"><i class="fas fa-shopping-cart"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+        <div class="row">
+            <div class="col-2">
+                <h1>Latest Arrivals</h1>
+                <h2>Amazefit</h2>
+                <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
+                <a href="" class="btn btn-dark">Buy Now <i class="fas fa-chevron-right"></i> </a>
+            </div>
+            <div class="col-2">
+                <img src="images/exclusive/amazefit.png" alt="">
+            </div>
+        </div>
+    </header>
+
+        <!-- 💡 Stylish Visual Search Section -->
+<section class="visual-search-section">
+  <div class="vs-container">
+    <h2 class="vs-title">👗 Try Visual Search</h2>
+    <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
+    
+    <label class="vs-upload-btn">
+      Upload Outfit
+      <input type="file" id="upload" accept="image/*" hidden />
+    </label>
+
+    <br />
+    <img id="user-image" class="vs-preview" hidden />
+    <div id="results" class="vs-results"></div>
+  </div>
+</section>
+
+    <section class="flex-grid section-padding">
+        <div class="row sort">
+            <h2>All Products</h2>
+            <select name="" id="">
+                <option>Default Shorting</option>
+                <option>Sort by Price</option>
+                <option>Sort by Popularity</option>
+                <option>Sort by Rating</option>
+                <option>Sort by sale</option>
+            </select>
+        </div>
+        <div class="row box">
+            <div class="column">
+                <div class="box-mg">
+                    <img src="images/products/tshirt1.jpg" alt="">
+                </div>
+                <h4>Avante Tshirt</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9;499.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/bag7.jpg" alt="">
+                <h4>Max bagpack</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9;599.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/dress2.jpg" alt="">
+                <h4>volkso dress</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                </div>
+                <p>&#x20B9;2499.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/dress 3.jpg" alt="">
+                <h4>magisho fur dress</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 3499.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/tshirt6.jpg" alt="">
+                <h4>Puma Tshirt</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9;499.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/tshirt5.jpg" alt="">
+                <h4>Puma tshirt</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9;1599.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/tshirt7.jpg" alt="">
+                <h4>MeTrouser</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                </div>
+                <p>&#x20B9;499.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/shoe10.jpg" alt="">
+                <h4>Hrx shoe</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 3499.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/product-8.jpg" alt="">
+                <h4>magisho Watch</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 1099.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/pant2.jpg" alt="">
+                <h4>Trouser </h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 699.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/product-7.jpg" alt="">
+                <h4>Hrx Socks</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 199.00</p>
+            </div>
+            <div class="column">
+                <img src="images/products/product-9.jpg" alt="">
+                <h4>Analoge watch</h4>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <i class="far fa-star"></i>
+                </div>
+                <p>&#x20B9; 399.00</p>
+            </div>
+        </div>
+        <div class="page-btn">
+            <a href="product-2.html">2</a>
+            <a href="#">3</a>
+            <a href="#">4</a>
+            <a href="#"><i class="fas fa-chevron-right"></i> </a>
+        </div>
+
+    </section>
+
+
+
+    <!-- EXCLUSIVE -->
+    <section class="exclusive bg-3">
+        <div class="box">
+            <div class="row">
+                <div class="col-2">
+                    <img src="images/third.png" class="exc-img">
+                </div>
+                <div class="col-2">
+                    <h1>Offer Zone</h1>
+                    <h2>50% OFF ON SELECTED ITEM</h2>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
+                    <a href="" class="btn btn-dark">Buy Now <i class="fas fa-chevron-right"></i> </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+<!-- TensorFlow JS -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+<script src="js/visual-search.js"></script>
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-left">
+            <img src="images/logo.jpeg" alt="">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
+            <div class="social">
+                <a href="#"><i class="fab fa-facebook fa-2x"></i></a>
+                <a href="#"><i class="fab fa-twitter fa-2x"></i></a>
+                <a href="#"><i class="fab fa-youtube fa-2x"></i></a>
+                <a href="#"><i class="fab fa-linkedin fa-2x"></i></a>
+            </div>
+        </div>
+
+        <ul class="footer-right">
+            <li>
+                <h3>Useful links</h3>
+
+                <ul class="box">
+                    <li><a href="#">Coupon</a></li>
+                    <li><a href="#">Join policy</a></li>
+                    <li><a href="#">Blog post</a></li>
+                    <li><a href="#">Inspiration</a></li>
+                    <li><a href="#">Account</a></li>
+                </ul>
+            </li>
+            <li class="feature">
+                <h3>Products</h3>
+
+                <ul class="box">
+                    <li><a href="#">Shoes</a></li>
+                    <li><a href="#">Shirts</a></li>
+                    <li><a href="#">Bag pack</a></li>
+                    <li><a href="#">Eyewear</a></li>
+                    <li><a href="#">Womens</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <h3>Address</h3>
+
+                <ul class="box">
+                    <li><a href="#">123,Cyber City</a></li>
+                    <li><a href="#">Sector 12</a></li>
+                    <li><a href="#">Gurugram, Haryana</a></li>
+                    <li><a href="#">112353</a></li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="footer-bottom">
+            <p>All right reserved &copy; FashionStore 2020</p>
+        </div>
+    </footer>
+
+
+    </section>
+
+
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js"
+        integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+    <script src="js/index.js"></script>
+    <!-- TensorFlow.js and BlazePose -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+
+   <!-- AI Size Estimator Floating Button -->
+<div id="estimator-float-btn">
+  <button id="size-estimator-btn" title="Estimate My Size">📏</button>
+</div>
+
+<!-- Chatbot Toggle Button -->
+<div id="chatbot-container">
+  <!-- 💬 This is the chatbot icon toggle button -->
+  <button id="chatbot-toggle" title="Open Chatbot">💬</button>
+
+  <!-- Chatbox -->
+  <div id="chatbox" class="hidden">
+    <div id="chat-header">Your AI Assistant <span id="close-chat">×</span></div>
+     
+    <div id="chat-messages"></div>
+    
+    <div id="chat-input-wrapper">
+        <div id="chat-status" style="display: none;">🎤 Listening...</div>
+      <input type="text" id="user-input" placeholder="Type a message..." />
+      <button id="mic-button" title="Speak">🎤</button>
+    </div>
+  </div>
+</div>
+<!-- AI Size Estimator Modal -->
+<div id="size-estimator-modal">
+  <div class="estimator-modal-box wide">
+    <h3>👗 Estimate Your Perfect Fit</h3>
+    <p class="subtext">Get AI size suggestions tailored to you</p>
+
+    <div class="estimator-form-row">
+      <div class="form-group">
+        <label for="height">📏 Height (cm)<small>(optional)</small></label>
+        <input type="number" id="height" placeholder="e.g. 165" />
+      </div>
+
+      <div class="form-group">
+        <label for="weight">⚖️ Weight (kg)<small>(optional)</small></label>
+        <input type="number" id="weight" placeholder="e.g. 60" />
+      </div>
+
+      <div class="form-group">
+        <label for="gender">🧍 Gender</label>
+        <select id="gender">
+          <option value="">Select</option>
+          <option value="male">👨 Male</option>
+          <option value="female">👩 Female</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group full">
+      <label for="photo">📸 Upload a Photo<span style="color: red;">*</span></label>
+      <input type="file" id="photo" accept="image/*" required/>
+    </div>
+
+    <button id="submit-estimate">🎯 Get My Size</button>
+    <div id="size-result"></div>
+    <button id="close-estimator" class="close-btn">❌ Close</button>
+    <canvas id="preview-canvas" style="display: none;"></canvas>
+    <!-- Animated Loader (hidden by default) -->
+<div id="loader" style="display: none; font-size: 1.2rem; text-align: center;">
+  <span class="emoji-loader">⏳</span> Processing your image...
+</div>
+  </div>
+</div>
+
+
+
+</body>
+
+</html>
+
+server.js
+const express = require('express');
+const path = require('path');
+const dotenv = require('dotenv');
+const { CohereClient } = require('cohere-ai'); // ✅ NEW import
+
+dotenv.config();
+
+const app = express();
+app.use(express.static(__dirname));
+app.use(express.json());
+
+// ✅ Initialize Cohere client
+const cohere = new CohereClient({
+  token: process.env.COHERE_API_KEY,
+});
+
+// ✅ Chatbot API endpoint using Cohere
+app.post('/api/chat', async (req, res) => {
+  const message = req.body?.message;
+  console.log("🟡 Incoming message:", message);
+
+  if (!message || typeof message !== 'string') {
+    console.log("❌ Invalid input:", req.body);
+    return res.status(400).json({ error: 'Invalid message format' });
+  }
+
+  try {
+    const response = await cohere.generate({
+      model: 'command',
+      prompt: `You are a friendly fashion store assistant. Help the user:\n${message}`,
+      maxTokens: 100,
+      temperature: 0.8,
+    });
+
+    const reply = response.generations?.[0]?.text?.trim();
+    console.log("🟢 Cohere reply:", reply);
+
+    res.json({ reply: reply || "⚠️ No response from Cohere." });
+  } catch (err) {
+    console.error("🔥 Cohere error:", err.message || err);
+    res.status(500).json({ error: 'Cohere API failed' });
+  }
+});
+
+// Serve index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/emotion', (req, res) => {
+  res.sendFile(path.join(__dirname, 'emotion.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+});
+
+tryon.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Virtual Specs Try-On</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(120deg, #e0f7fa, #ffffff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 24px;
+      color: #333;
+    }
+
+    .video-container {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      margin-top: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      background: #000;
+    }
+
+    video, canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 640px;
+      height: 480px;
+    }
+
+    #suggestion {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      font-weight: bold;
+      color: #222;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+<h1>Try On Your Specs Virtually</h1>
+
+<div class="video-container">
+  <video id="videoElement" autoplay muted playsinline></video>
+  <canvas id="overlay"></canvas>
+</div>
+
+<p id="suggestion">Detecting face shape...</p>
+
+<!-- Load Mediapipe -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<script>
+  const videoElement = document.getElementById('videoElement');
+  const canvas = document.getElementById('overlay');
+  const ctx = canvas.getContext('2d');
+  const glassesImage = new Image();
+  glassesImage.src = 'images/aviator.png';  // your image
+
+  function getFaceShape(landmarks) {
+    const jawWidth = Math.abs(landmarks[234].x - landmarks[454].x);
+    const cheekboneWidth = Math.abs(landmarks[93].x - landmarks[323].x);
+    const foreheadWidth = Math.abs(landmarks[127].x - landmarks[356].x);
+    const faceHeight = Math.abs(landmarks[10].y - landmarks[152].y);
+
+    if (faceHeight > cheekboneWidth && cheekboneWidth > jawWidth) return "Oval";
+    if (Math.abs(jawWidth - cheekboneWidth) < 0.03 && Math.abs(jawWidth - foreheadWidth) < 0.03) return "Round";
+    if (jawWidth > cheekboneWidth && faceHeight < cheekboneWidth) return "Square";
+    if (foreheadWidth > jawWidth && faceHeight > cheekboneWidth) return "Heart";
+    return "Diamond";
+  }
+
+  function getFrameSuggestion(shape) {
+    switch (shape) {
+      case "Oval": return "Square, Rectangular or Geometric Frames";
+      case "Round": return "Angular or Rectangular Frames";
+      case "Square": return "Round or Oval Frames";
+      case "Heart": return "Bottom-heavy or Light-colored Frames";
+      case "Diamond": return "Rimless or Oval Frames";
+      default: return "Any Frame Type";
+    }
+  }
+
+  const faceMesh = new FaceMesh({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+  });
+
+  faceMesh.setOptions({
+    maxNumFaces: 1,
+    refineLandmarks: true,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+  });
+
+  faceMesh.onResults(({ multiFaceLandmarks }) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (multiFaceLandmarks && multiFaceLandmarks.length > 0) {
+      const lm = multiFaceLandmarks[0];
+
+      const leftTemple = lm[234];
+      const rightTemple = lm[454];
+      const leftEye = lm[159];
+      const rightEye = lm[386];
+
+      const lx = leftTemple.x * canvas.width;
+      const ly = leftTemple.y * canvas.height;
+      const rx = rightTemple.x * canvas.width;
+      const ry = rightTemple.y * canvas.height;
+
+      const centerX = (lx + rx) / 2;
+      const centerY = ((leftEye.y + rightEye.y) / 2) * canvas.height;
+
+      const cheekLeft = lm[93];
+const cheekRight = lm[323];
+const cheekDist = Math.hypot(
+  (cheekRight.x - cheekLeft.x) * canvas.width,
+  (cheekRight.y - cheekLeft.y) * canvas.height
+);
+
+const glassesWidth = cheekDist * 1.25; // slightly bigger to fit wider faces
+
+      const aspectRatio = glassesImage.naturalWidth / glassesImage.naturalHeight;
+      const glassesHeight = glassesWidth / aspectRatio;
+
+      const angle = Math.atan2(ry - ly, rx - lx);
+
+      ctx.save();
+      ctx.translate(centerX, centerY + 10); // +10 to shift slightly down
+      ctx.rotate(angle);
+      ctx.drawImage(
+        glassesImage,
+        -glassesWidth / 2,
+        -glassesHeight / 2,
+        glassesWidth,
+        glassesHeight
+      );
+      ctx.restore();
+
+      const shape = getFaceShape(lm);
+      document.getElementById("suggestion").innerText =
+        `Suggested Frame for ${shape} Face: ${getFrameSuggestion(shape)}`;
+    }
+  });
+
+  const camera = new Camera(videoElement, {
+    onFrame: async () => {
+      await faceMesh.send({ image: videoElement });
+    },
+    width: 640,
+    height: 480
+  });
+
+  async function setupCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoElement.srcObject = stream;
+    } catch (err) {
+      console.error("Camera error:", err);
+      document.getElementById("suggestion").innerText = "Please allow camera access.";
+    }
+  }
+
+  setupCamera().then(() => {
+    videoElement.onloadedmetadata = () => {
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      camera.start();
+    };
+  });
+</script>
+
+</body>
+</html>
+
+
+styles.css
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 350;
+    background-color: #fff;
+    color: #243a6f;
+    line-height: 1.6;
+    position: relative;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-weight: 500;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+img {
+    max-width: 100%;
+}
+
+li {
+    list-style-type: none;
+}
+
+
+
+/* header */
+.navbar {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 70px;
+    position: fixed;
+    top: 0px;
+    padding: 0 30px;
+    transition: 1s;
+    background-color: #333;
+    opacity: 0.8;
+    color: #fff;
+    transition: 1000ms;
+    z-index: 20;
+
+}
+
+.navbar.top {
+    background: transparent;
+
+
+}
+
+.navbar.top a {
+    background: transparent;
+    color: #243a6f;
+    font-weight: 500;
+
+}
+
+.navbar.top .logo {
+    background: transparent;
+    color: #243a6f;
+    font-weight: 500;
+
+}
+
+.navbar a {
+    padding: 10px 10px;
+
+}
+
+
+.navbar a:hover {
+    color: #f7073b;
+    font-weight: 500;
+    transition: color 300ms ease-in-out;
+}
+
+.navbar ul {
+    display: flex;
+}
+
+.hamburger {
+    background-color: transparent;
+    border: 0;
+    color: #fff;
+    display: none;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.hamburger:focus {
+    outline: none;
+}
+
+.logo {
+    font-size: 1rem;
+}
+
+.icon {
+    font-size: 1.5rem;
+}
+
+
+.header {
+    background: radial-gradient(#fff, #ffd6d6);
+    margin-bottom: 20px;
+}
+
+/* Featured Product */
+.title {
+    text-align: center;
+    margin: 0 auto 60px;
+    position: relative;
+    line-height: 1.6;
+    color: #555;
+}
+
+.title::after {
+    content: '';
+    background-color: #ff523b;
+    width: 180px;
+    height: 5px;
+    border-radius: 5px;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: -1;
+}
+
+.flex-grid .column h4 {
+    color: #555;
+    font-weight: normal;
+}
+
+.flex-grid .column p {
+    font-size: 1.2rem;
+}
+
+.fas,
+.far {
+    color: #ff523b;
+}
+
+.flex-grid .column img:hover {
+    transform: scale(1.023);
+    box-shadow: 0 25px 40px rgba(0, 0, 0, 0.8);
+}
+
+/* EXCLUSIVE ARRIVAL */
+.bg-1 {
+    background: radial-gradient(#f12711, #f5a519);
+}
+
+.bg-2 {
+    background: radial-gradient(#659999, #f4792f);
+}
+
+.bg-3 {
+    background: radial-gradient(#009fff, #ec2f4b);
+}
+
+.bg-4 {
+    background: linear-gradient(to right, #2980b9, #6dd5fa);
+}
+
+/* BRANDS */
+.brands {
+    margin: 40px auto;
+}
+
+.col-5 {
+    width: 150px;
+}
+
+.col-5 img {
+    width: 100%;
+    cursor: pointer;
+    filter: grayscale(100%);
+}
+
+.col-5 img:hover {
+    filter: grayscale(0);
+}
+
+/* CART */
+
+.cart {
+    margin: 80px auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    padding: 5px;
+    color: #fff;
+    background: #243a6f;
+    font-weight: normal;
+}
+
+td {
+    padding: 10px 5px;
+}
+
+td input {
+    width: 40px;
+    height: 30px;
+    padding: 5px;
+}
+
+.box td a {
+    color: #f12711;
+    font-size: 12px;
+}
+
+
+
+.cart-info {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.cart-info img {
+    width: 100px;
+    height: 100px;
+    margin-right: 10px;
+}
+
+.total-price {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.total-price table {
+    border-top: 3px solid #243a6f;
+    width: 100%;
+    max-width: 420px;
+}
+
+td:last-child {
+    text-align: right;
+}
+
+th:last-child {
+    text-align: right;
+}
+
+
+/* ACCOUNT */
+
+.account {
+    padding: 50px 0;
+    margin-top: 0;
+    background: radial-gradient(#1c92d2, #f2fcfe);
+}
+
+.form-container {
+    background-color: #fff;
+    width: 300px;
+    height: 400px;
+    position: relative;
+    text-align: center;
+    padding: 20px 0;
+    margin: auto;
+    box-shadow: 0 0 20px 0px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.form-container span {
+    font-weight: bold;
+    padding: 0 10px;
+    color: #333;
+    cursor: pointer;
+    width: 100px;
+    display: inline-block;
+}
+
+.form-btn {
+    display: inline-block;
+}
+
+.form-container form {
+    max-width: 300px;
+    padding: 0 20px;
+    position: absolute;
+    top: 130px;
+    transition: transform 1000ms;
+}
+
+form input {
+    width: 100%;
+    height: 30px;
+    margin: 10px 0;
+    padding: 0 10px;
+    border: 1px solid #f6f6f6;
+}
+
+form .btn {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+form .btn:focus {
+    outline: none;
+}
+
+form a {
+    font-size: 12px;
+}
+
+#loginFrm {
+    left: -300px;
+}
+
+#regFrm {
+    left: 0;
+}
+
+#active {
+    width: 100px;
+    border: none;
+    background-color: #243a6f;
+    height: 3px;
+    margin-top: 8px;
+    transform: translateX(100px);
+    transition: transform 1000ms;
+
+}
+#chatbot-container {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  z-index: 1000;
+  font-family: 'Poppins', sans-serif;
+}
+
+#chatbot-toggle {
+  background-color: #6c63ff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 24px;
+  font-size: 34px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+
+#chatbot-toggle:hover {
+  background-color: #857ff6;
+  transform: scale(1.1);
+}
+
+#chatbox {
+  width: 50vw;                     /* half screen width */
+  height: 70vh;                    /* taller for better space */
+  background: linear-gradient(to bottom, #fdfbfb, #ebedee);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  bottom: 100px;
+  right: 25px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  border: 1px solid #d0d0d0;
+  transition: all 0.3s ease;
+}
+
+#chatbox.hidden {
+  display: none;
+}
+
+#chat-header {
+  background-color: #6c63ff;
+  color: white;
+  padding: 18px 24px;
+  font-weight: 600;
+  font-size: 1.3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#chat-messages {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+  font-size: 1rem;
+  color: #333;
+  background: #f7f9fc;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+}
+
+#chat-messages div {
+  margin-bottom: 14px;
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.06);
+}
+
+#chat-messages div strong {
+  color: #6c63ff;
+  display: block;
+  margin-bottom: 5px;
+}
+
+#user-input {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #f8f9fa;
+}
+
+#user-input::placeholder {
+  color: #c5bdfc;                /* pastel lavender */
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-style: italic;
+  opacity: 1;
+}
+
+#chat-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid #eee;
+}
+
+/* FOR FOOTER */
+@media screen and (max-width:768px) {
+    .footer {
+        padding: 15px;
+        font-size: 30px;
+
+    }
+
+    .footer-right>* {
+        flex: 1;
+    }
+
+}
+
+/* FOR HAM-MENU */
+@media only screen and (max-width:768px) {
+
+    nav .nav-ul {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 70px;
+        background-color: #333;
+        color: #fff;
+        max-height: 100vh;
+        trans
+    }
+
+    nav .nav-ul li {
+        display: block;
+        margin-right: 150px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .navbar.top a {
+        color: #fff;
+    }
+
+    .navbar {
+        justify-content: center;
+        text-align: left;
+    }
+
+    .nav-ul.show {
+        display: flex;
+    }
+
+    .hamburger {
+        display: inline-block;
+    }
+
+    /* PAGE */
+    .mob {
+        display: none;
+    }
+
+    .mobs {
+        font-size: 1.6rem;
+
+    }
+
+    .col-2 {
+        padding-top: 60px;
+    }
+
+    .row {
+        text-align: center;
+        flex-direction: column;
+    }
+
+    .testimony .column {
+        margin-top: 20px;
+        ;
+    }
+
+    .col-2 h2 {
+        font-weight: 300;
+        margin: 0 10px;
+
+    }
+
+    .col-2 img {
+        padding: 6px;
+    }
+
+    .fa-bars {
+        margin-left: 50px;
+    }
+
+    .footer p,
+    a {
+        font-size: 24px;
+    }
+
+    .cart-info p {
+        display: none;
+    }
+
+}
+
+#mic-button {
+  padding: 10px 14px;
+  font-size: 20px;
+  border: none;
+  background: #dfeaff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+#mic-button:hover {
+  background-color: #cddffd;
+}
+/* ============================
+   AI SIZE ESTIMATOR MODAL
+   ============================ */
+#size-estimator-modal {
+  display: none;
+  position: fixed;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  padding: 30px 25px;
+  border: 2px solid #243a6f;
+  border-radius: 15px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+#size-estimator-modal h3 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #243a6f;
+}
+
+#size-estimator-modal input,
+#size-estimator-modal select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+}
+
+#size-estimator-modal button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: none;
+  background-color: #243a6f;
+  color: #fff;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+#size-estimator-modal button:hover {
+  background-color: #324c96;
+}
+
+#size-result {
+  font-weight: bold;
+  margin-top: 15px;
+  color: #243a6f;
+}
+
+/* Responsive for AI Size Estimator */
+@media screen and (max-width: 480px) {
+  #size-estimator-modal {
+    width: 95%;
+    padding: 20px 15px;
+  }
+
+  #size-estimator-modal h3 {
+    font-size: 1.2rem;
+  }
+
+  #size-estimator-modal input,
+  #size-estimator-modal select {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+  #size-estimator-modal button {
+    font-size: 0.95rem;
+  }
+}
+.estimator-modal-box label {
+  text-align: left;
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #243a6f;
+}
+
+.estimator-modal-box input[type="file"] {
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.estimator-modal-box input[type="file"]:hover {
+  background: #f0f0f0;
+  cursor: pointer;
+}
+
+/* =============================
+   AI Estimator Floating Button
+   ============================= */
+#estimator-float-btn {
+  position: fixed;
+  bottom: 120px; /* was 95px — increase to move higher */
+  right: 25px;
+  z-index: 999;
+}
+
+#estimator-float-btn button {
+  background-color: #243a6f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 24px;
+  font-size: 32px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+
+#estimator-float-btn button:hover {
+  background-color: #324c96;
+  transform: scale(1.1);
+}
+/* Horizontal layout form */
+.estimator-modal-box.wide {
+  width: 95%;
+  max-width: 850px;
+}
+
+.estimator-form-row {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.form-group.full {
+  width: 100%;
+  margin-top: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #243a6f;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f9f9f9;
+}
+
+.form-group input[type="file"] {
+  padding: 10px;
+  background: #f0f0f0;
+}
+/* Animated emoji spin */
+@keyframes rotateEmoji {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(20deg); }
+  100% { transform: rotate(-20deg); }
+}
+
+.emoji-loader {
+  display: inline-block;
+  animation: rotateEmoji 0.6s infinite alternate ease-in-out;
+}
+.visual-search-section {
+  width: 100vw; /* Full screen width */
+  padding: 60px 0;
+  background: linear-gradient(135deg, #ffe4ec, #e8f0ff);
+  text-align: center;
+  overflow-x: hidden;
+}
+
+.vs-container {
+  width: 100%;       /* Take full width */
+  padding: 0 5vw;    /* Soft side padding */
+  box-sizing: border-box;
+}
+
+
+.vs-title {
+  font-size: 32px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.vs-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.vs-upload-btn {
+  display: inline-block;
+  background: #ff3e6c;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s ease;
+}
+
+.vs-upload-btn:hover {
+  background: #e5375f;
+}
+
+.vs-preview {
+  margin-top: 20px;
+  max-width: 200px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.vs-results {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.vs-results .column {
+  background: #fafafa;
+  padding: 15px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.vs-results .column:hover {
+  transform: translateY(-6px);
+}
+
+.vs-results img {
+  width: 160px;
+  border-radius: 12px;
+}
+
+.vs-results h4 {
+  margin: 10px 0 5px;
+  font-size: 16px;
+  color: #444;
+}
+
+.vs-results p {
+  font-size: 13px;
+  color: #888;
+}
+
+utility.css
+
+/* Button */
+.btn {
+    cursor: pointer;
+    background-color: #ff523b;
+    border: none;
+    border-radius: 5px;
+    color: #f4f4f4;
+    padding: 10px 20px;
+    margin: 30px 0;
+    display: inline-block;
+    transition: opacity 500ms;
+}
+
+
+.btn:hover {
+    opacity: 0.6;
+}
+
+.btn-dark {
+    background: #333;
+    color: #fff;
+}
+
+.box .s-btn {
+    background: #011c39;
+    padding: 6px 14px;
+    border-radius: 80px;
+    color: #f4f4f4;
+}
+
+
+
+/* Home */
+.row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+}
+
+.col-2 {
+    flex-basis: 50%;
+    min-width: 300px;
+    padding: 30px 0;
+}
+
+
+.col-2 img {
+    max-width: 100%;
+    padding: 50px 0;
+}
+
+
+.col-2 h1 {
+    font-size: 40px;
+    font-weight: 300;
+}
+
+.col-2 h2 {
+    margin-bottom: 10px;
+}
+
+.col-2 p {
+    margin: 20px 0;
+}
+
+/* featured */
+
+.section-padding {
+    padding: 20px 40px 40px;
+}
+
+.flex-grid .row {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 4px;
+}
+
+.flex-grid .column {
+    flex: 25%;
+    max-width: 500px;
+    padding: 0 4px;
+    padding-bottom: 40px;
+
+}
+
+.flex-grid img {
+    width: 100%;
+}
+
+.box {
+    max-width: 1080px;
+    margin: auto;
+    padding-left: 25px;
+    padding-right: 25px;
+    transition: 800ms;
+}
+
+/* TESTIMONIAL */
+.testimony {
+    padding-top: 30px;
+    background: linear-gradient(to right, #E9E4F0, #D3CCE3);
+}
+
+.testimony .row {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 4px;
+}
+
+.testimony .column {
+    flex: 25%;
+    max-width: 1280px;
+    padding: 30px 20px;
+    padding-bottom: 40px;
+    text-align: center;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: transform 500ms;
+}
+
+.testimony .column:hover {
+    transform: translateY(-20px);
+}
+
+.testimony img {
+    width: 400px;
+    border-radius: 15%;
+    height: 250px;
+}
+
+.testimony .column h4 {
+    color: #555;
+    font-weight: normal;
+}
+
+.testimony .column p {
+    font-size: 1rem;
+}
+
+/* FOOTER */
+.footer {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    padding: 40px;
+    color: #fff;
+    background-color: #011c39;
+}
+
+.footer>* {
+    flex: 1 100%;
+}
+
+.footer-left {
+    flex: 1 0px;
+    margin-right: 1.2em;
+    margin-bottom: 10px;
+}
+
+
+.footer-left img {
+    width: 50%;
+    height: 140px;
+}
+
+h3 {
+    font-weight: 600;
+    font-size: 17px;
+}
+
+.footer ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.footer li {
+    line-height: 2rem;
+}
+
+.footer a {
+    text-decoration: none;
+}
+
+.footer-right {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 2 0px;
+}
+
+.footer-right>* {
+    flex: 1;
+    margin-right: 1.2em;
+}
+
+.box a {
+    color: #999;
+}
+
+
+.footer-bottom {
+    text-align: center;
+    color: #999;
+}
+
+.footer-left p {
+    padding-right: 20%;
+    color: #999;
+}
+
+.social a {
+    background-color: #364a62;
+    width: 40px;
+    height: 6px;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.social a i {
+    color: #e7f2f4;
+    padding: 14px 12px;
+    font-size: 40px;
+}
+
+/* AlL PRODUCTS */
+.sort {
+    justify-content: space-between;
+    margin: 10px 57px;
+}
+
+select {
+    border: 1px solid #011c39;
+    padding: 5px;
+}
+
+/* DIFFERENT PAGES */
+.page-btn {
+    margin: 0px 0px 40px 80px;
+}
+
+.page-btn a {
+    display: inline-block;
+    border: 1px solid #ff523b;
+    margin-left: 10px;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+    cursor: pointer;
+}
+
+.page-btn a:hover {
+    background-color: #011c39;
+    color: #fff;
+}
+
+
+/* SINGLE PRODUCT PAGE */
+.s-product {
+    margin-top: 80px;
+}
+
+.s-product .col-2 img {
+    padding: 0;
+    height: 400px;
+}
+
+.s-product .col-2 {
+    padding: 20px;
+    text-align: left;
+}
+
+.s-product h4 {
+    margin: 20px 0;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.s-product select {
+    display: block;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+.s-product input {
+    width: 50px;
+    height: 40px;
+    padding-left: 10px;
+    font-size: 20px;
+    margin-right: 10px;
+    border: 1px solid #011c39;
+}
+
+input:focus {
+    outline: none;
+}
+
+.s-product .fa-indent {
+    margin-left: 10px;
+}
+
+.s-product p {
+    font-size: 18px;
+}
+
+.row-2 {
+    color: #011c39;
+    justify-content: space-between;
+}
+
+.row-2 a {
+    color: #011c39;
+}
+
+.row-2 a:hover {
+    color: #ff523b;
+}
+
+spin-wheel-game.html
+
+<!-- 🌀 SPIN TO WIN GAME: HTML -->
+<div id="spin-wheel-container">
+    <h2 style="
+  color: #fff;
+  background: linear-gradient(to right, #d32f2f, #f44336); /* Cherry Red Gradient */
+  display: inline-block;
+  padding: 10px 25px;
+  border-radius: 12px;
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+">
+  🎉 Spin to Win!
+</h2>
+
+  <div class="wheel-wrapper">
+    <!-- 🎡 Canvas Wheel -->
+    <canvas id="wheelCanvas" width="400" height="400"></canvas>
+
+    <!-- 🎯 Spin Button -->
+    <button id="spinBtn" class="spin-btn">🎯 SPIN</button>
+  </div>
+  <div id="spin-result"></div>
+</div>
+
+<!-- Confetti -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<!-- 💄 STYLE -->
+<style>
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    background: linear-gradient(135deg, #fceabb, #f8b500);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    animation: floatUp 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes floatUp {
+    0% {
+      transform: translateY(100vh) scale(0.5);
+      opacity: 0;
+    }
+    50% {
+      opacity: 0.6;
+    }
+    100% {
+      transform: translateY(-10vh) scale(1);
+      opacity: 0;
+    }
+  }
+
+  #spin-wheel-container {
+    text-align: center;
+    background: linear-gradient(135deg, #ff6f61, #ffcc70);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+    max-width: 500px;
+    width: 90vw;
+  }
+
+  .wheel-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #wheelCanvas {
+    border: 5px solid #ffd54f;
+    border-radius: 50%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .spin-btn {
+    margin-top: 30px;
+    padding: 15px 40px;
+    font-size: 18px;
+    background: linear-gradient(to right, #ff416c, #ff4b2b);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+  }
+
+  .spin-btn:hover {
+    transform: scale(1.05);
+  }
+
+  #spin-result {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #3f51b5;
+  }
+</style>
+
+<!-- 💡 SPIN LOGIC SCRIPT -->
+<script>
+  // 🎈 Floating bubbles
+  for (let i = 0; i < 20; i++) {
+    const bubble = document.createElement('div');
+    bubble.classList.add('bubble');
+    const size = Math.random() * 60 + 20;
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = `${Math.random() * 100}%`;
+    bubble.style.animationDuration = `${10 + Math.random() * 10}s`;
+    bubble.style.animationDelay = `${Math.random() * 5}s`;
+    document.body.appendChild(bubble);
+  }
+
+  // 🎡 WHEEL LOGIC
+  const canvas = document.getElementById("wheelCanvas");
+  const ctx = canvas.getContext("2d");
+  const segments = [
+    "🎁 ₹5000 OFF",
+    "🚚 Free Shipping",
+    "🎉 70% OFF",
+    "❌ Try Again",
+    "👕 ₹1000 OFF",
+    "🔥 Buy 1 Get 1",
+    "🎊 Surprise Gift",
+    "❌ No Luck"
+  ];
+  const colors = ["#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#4caf50", "#00bcd4", "#e91e63", "#9c27b0"];
+  const radius = canvas.width / 2;
+
+  function drawWheel(highlightIndex = -1, blinkState = false) {
+    const angle = (2 * Math.PI) / segments.length;
+    for (let i = 0; i < segments.length; i++) {
+      ctx.beginPath();
+      ctx.fillStyle = (i === highlightIndex)
+        ? (blinkState ? "#ffffff" : "#ffff00")
+        : colors[i % colors.length];
+
+      ctx.moveTo(radius, radius);
+      ctx.arc(radius, radius, radius, i * angle, (i + 1) * angle);
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate(i * angle + angle / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#000";
+      ctx.font = "bold 14px sans-serif";
+      ctx.fillText(segments[i], radius - 10, 10);
+      ctx.restore();
+    }
+  }
+
+  drawWheel();
+
+  const spinBtn = document.getElementById("spinBtn");
+  const resultBox = document.getElementById("spin-result");
+
+  spinBtn.addEventListener("click", () => {
+    spinBtn.disabled = true;
+    resultBox.innerText = "Spinning... 🌀";
+
+    const spinAngle = Math.random() * 360 + 720;
+    const duration = 4000;
+    const start = performance.now();
+
+    function animate(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const currentAngle = spinAngle * easeOutCubic(progress);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate((currentAngle * Math.PI) / 180);
+      ctx.translate(-radius, -radius);
+      drawWheel();
+      ctx.restore();
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        const finalAngle = (spinAngle % 360);
+        const segmentAngle = 360 / segments.length;
+        const index = Math.floor((segments.length - finalAngle / segmentAngle) % segments.length);
+        const prize = segments[index];
+
+        let blink = true;
+        let blinkCount = 0;
+        const maxBlinks = 8;
+
+        function blinkAnimation() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.save();
+          ctx.translate(radius, radius);
+          ctx.rotate((finalAngle * Math.PI) / 180);
+          ctx.translate(-radius, -radius);
+          drawWheel(index, blink);
+          ctx.restore();
+
+          blink = !blink;
+          blinkCount++;
+
+          if (blinkCount < maxBlinks) {
+            setTimeout(blinkAnimation, 200);
+          } else {
+            resultBox.innerHTML = `🎉 You got: <strong>${segments[index]}</strong>`;
+            spinBtn.disabled = false;
+
+            if (!segments[index].includes("❌")) {
+              for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                  confetti({
+                    particleCount: 100,
+                    spread: 70 + i * 10,
+                    origin: { y: 0.6 }
+                  });
+                }, i * 300);
+              }
+            }
+          }
+        }
+
+        blinkAnimation();
+      }
+    }
+
+    requestAnimationFrame(animate);
+  });
+
+  function easeOutCubic(t) {
+    return (--t) * t * t + 1;
+  }
+</script>
+
+nearby.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nearby Boutiques – Free Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Google Font + Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --primary: #8e44ad;
+      --accent: #f7f1ff;
+      --bg-light: linear-gradient(to right, #f9f3ff, #e5d6f9);
+      --bg-dark: #1f1f1f;
+      --card-dark: #2a2a2a;
+      --text-dark: #e0e0e0;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Urbanist', sans-serif;
+      background: var(--bg-light);
+      color: #904444;
+      transition: background 0.3s, color 0.3s;
+      font-size: 18px;
+    }
+
+    h2 {
+      text-align: center;
+      font-weight: 700;
+      font-size: 2.2rem;
+      color: var(--primary);
+      margin-top: 20px;
+    }
+
+    p {
+      text-align: center;
+      font-size: 1.1rem;
+      margin: 8px 0 20px;
+    }
+
+    #map {
+      height: 400px;
+      width: 90%;
+      margin: 0 auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 2px solid var(--primary);
+    }
+
+    #controls {
+      text-align: center;
+      margin: 20px auto;
+    }
+
+    .filter-toggle {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 30px;
+      margin: 0 10px;
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+
+    .filter-toggle.off {
+      background-color: #ccc;
+      color: #444;
+    }
+
+    body.dark .filter-toggle.off {
+      background-color: #444;
+      color: #aaa;
+    }
+
+   #boutique-list {
+  width: 90%;
+  max-width: 1200px;
+  margin: 30px auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.bubble-card {
+  background: linear-gradient(135deg, #ffe0f0, #f9f0ff);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+  font-size: 1.05rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #f3c3e8;
+}
+
+.bubble-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.03);
+}
+
+.bubble-card strong {
+  color: #8e44ad;
+  font-size: 1.2rem;
+}
+
+.bubble-card i {
+  color: #555;
+  margin-right: 8px;
+}
+
+    .loader {
+      text-align: center;
+      font-size: 1.3rem;
+      margin: 30px 0;
+    }
+
+    @media (max-width: 768px) {
+      #map, #boutique-list {
+        width: 95%;
+      }
+
+      .filter-toggle.off {
+        background-color: #ccc;
+  color: #444;
+      }
+
+      .bubble-card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h2>📍 Boutiques Near You</h2>
+<p>Click on the map to set your location manually</p>
+
+<div id="controls">
+  <span id="openFilter" class="filter-toggle off">Open Now</span>
+  <span id="deliveryFilter" class="filter-toggle off">Delivery Available</span>
+</div>
+
+<div id="map"></div>
+<div id="boutique-list" class="loader">🔄 Waiting for location...</div>
+
+<script>
+  const map = L.map('map').setView([12.9300, 80.1350], 14);
+  let userMarker;
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  function setUserLocation(lat, lng) {
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.marker([lat, lng], { draggable: true }).addTo(map)
+      .bindPopup("📍 Your Location")
+      .openPopup();
+    map.setView([lat, lng], 15);
+    fetchNearbyShops(lat, lng);
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => setUserLocation(pos.coords.latitude, pos.coords.longitude),
+      () => alert("Enable location or click on the map to set manually.")
+    );
+  }
+
+  map.on("click", e => setUserLocation(e.latlng.lat, e.latlng.lng));
+
+  function fetchNearbyShops(userLat, userLng) {
+    const listDiv = document.getElementById("boutique-list");
+    listDiv.className = "loader";
+    listDiv.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Searching nearby boutiques...`;
+
+    const radius = 2000;
+    const query = `
+      [out:json];
+      (
+        node["shop"="clothes"](around:${radius},${userLat},${userLng});
+        node["shop"="boutique"](around:${radius},${userLat},${userLng});
+      );
+      out center;
+    `;
+
+    fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: query
+    })
+    .then(res => res.json())
+    .then(data => {
+      listDiv.className = "";
+      listDiv.innerHTML = "";
+
+      const openNow = !document.getElementById("openFilter").classList.contains("off");
+      const delivery = !document.getElementById("deliveryFilter").classList.contains("off");
+
+      const filtered = data.elements.filter(el => {
+        const simulateOpen = Math.random() > 0.3;
+        const simulateDelivery = Math.random() > 0.5;
+        el.simOpen = simulateOpen;
+        el.simDelivery = simulateDelivery;
+        return (!openNow || simulateOpen) && (!delivery || simulateDelivery);
+      });
+
+      if (filtered.length === 0) {
+        listDiv.innerHTML = "❌ No boutiques found in this location.";
+        return;
+      }
+
+      filtered.forEach(el => {
+        const name = el.tags.name || "Unnamed Boutique";
+        const distMeters = map.distance([userLat, userLng], [el.lat, el.lon]);
+        const distKm = (distMeters / 1000).toFixed(2);
+
+        const speed = 20, prep = 10, delay = Math.random() * 10 + 5, buffer = 5;
+        const travel = (distKm / speed) * 60;
+        const deliveryMins = Math.round(travel + prep + delay + buffer);
+
+        L.marker([el.lat, el.lon]).addTo(map).bindPopup(`🛍️ ${name}`);
+
+        const isNalli = name.toLowerCase().includes("nalli");
+const link = isNalli ? "nalli.html" : "#";
+
+listDiv.innerHTML += `
+  <a href="${link}" style="text-decoration: none; color: inherit;">
+    <div class="bubble-card">
+      <i class="fas fa-store"></i> <strong>${name}</strong><br>
+      <i class="fas fa-location-dot"></i> Distance: ${distKm} km<br>
+      <i class="fas fa-truck"></i> Est. Delivery: ${deliveryMins} mins<br>
+      <i class="fas ${el.simOpen ? 'fa-clock' : 'fa-clock-rotate-left'}"></i> ${el.simOpen ? "Open Now" : "Closed"}<br>
+      <i class="fas fa-motorcycle"></i> ${el.simDelivery ? "Delivery Available" : "No Delivery"}
+    </div>
+  </a>
+`;
+
+      });
+    })
+    .catch(() => {
+      listDiv.innerHTML = "⚠️ Error fetching boutiques.";
+    });
+  }
+
+  // Filter toggle logic
+  document.querySelectorAll('.filter-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('off');
+      if (userMarker) {
+        const { lat, lng } = userMarker.getLatLng();
+        fetchNearbyShops(lat, lng);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
+
+nalli.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Boutique Collection – Nalli</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <style>
+    body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f6d365, #fda085, #f093fb, #c3cfe2);
+  background-size: 400% 400%;
+  animation: gradientFlow 15s ease infinite;
+  color: #333;
+}
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+
+    header {
+  background: linear-gradient(to bottom, rgba(255, 179, 71, 0.7), rgba(255, 94, 98, 0.7)),
+              url('images/nalli-dubai.webp') center/cover no-repeat;
+  padding: 10px 5px;
+  text-align: center;
+  color: white;
+  background-blend-mode: overlay;
+
+
+
+    .nalli-logo {
+      height: 80px;
+      width: 200px;
+      margin-right: 80px;
+    }
+
+    .tagline {
+      font-size: 2rem;
+      color: #333;
+      font-family: 'Segoe UI', sans-serif;
+    }
+}
+
+    .collection-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 25px;
+      padding: 40px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .collection-item {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .collection-item:hover {
+      transform: scale(1.03);
+    }
+
+    .collection-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .info {
+      padding: 12px;
+    }
+
+    .price {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #8e44ad;
+      margin-bottom: 6px;
+    }
+
+    .rating {
+      color: gold;
+      font-size: 0.9rem;
+    }
+
+    .order-btn {
+      background-color: #8e44ad;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-size: 0.95rem;
+      margin: 10px auto 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .order-btn:hover {
+      background-color: #732d91;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 16px;
+      padding: 30px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+    }
+
+    .modal-content h3 {
+      margin-bottom: 20px;
+      color: #8e44ad;
+    }
+
+    .modal-content form input,
+    .modal-content form textarea {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .modal-content button {
+      padding: 10px 20px;
+      background-color: #8e44ad;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .modal-content button:hover {
+      background-color: #6e3391;
+    }
+
+    .close-btn {
+      margin-top: 10px;
+      background: #ccc !important;
+      color: #333 !important;
+    }
+
+    #confirmation {
+      display: none;
+      font-size: 1rem;
+      color: green;
+      margin-top: 10px;
+    }
+
+    #camera {
+      width: 100%;
+      height: 180px;
+      display: none;
+      margin-bottom: 10px;
+      border-radius: 12px;
+    }
+
+    #faceStatus {
+      color: green;
+      font-weight: bold;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+  <img src="images/nalli-logo-png.png" alt="Nalli Logo" class="nalli-logo" />
+  <p class="tagline">Discover curated styles from here</p>
+</header>
+
+  <section class="collection-grid">
+    <div class="collection-item">
+      <img src="images/nalli4.jpeg" alt="Banaras Silk Sarees">
+      <div class="info">
+        <div class="price">₹699</div>
+        <div class="rating">★★★★☆ (4.2)</div>
+        <button class="order-btn" onclick="openModal('Banaras Silk saree', 699)">Place My Order</button>
+      </div>
+    </div>
+
+    <div class="collection-item">
+      <img src="images/nalli3.webp" alt="Poonam saree">
+      <div class="info">
+        <div class="price">₹1499</div>
+        <div class="rating">★★★★★ (4.8)</div>
+        <button class="order-btn" onclick="openModal('Poonam saree', 1499)">Place My Order</button>
+      </div>
+    </div>
+
+    <div class="collection-item">
+      <img src="images/nalli2.jpg" alt="Copper silk saree">
+      <div class="info">
+        <div class="price">₹899</div>
+        <div class="rating">★★★☆☆ (3.9)</div>
+        <button class="order-btn" onclick="openModal('Copper silk saree', 899)">Place My Order</button>
+      </div>
+    </div>
+
+    <div class="collection-item">
+      <img src="images/nalli1.webp" alt="Kanchi silk saree">
+      <div class="info">
+        <div class="price">₹1299</div>
+        <div class="rating">★★★★☆ (4.4)</div>
+        <button class="order-btn" onclick="openModal('Kanchi Silk Saree', 1299)">Place My Order</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal -->
+  <div class="modal" id="orderModal">
+    <div class="modal-content">
+      <h3>🛒 Complete Your Order</h3>
+      <p id="selectedItem">Item: -</p>
+      <form onsubmit="submitOrder(event)">
+        <input type="text" id="name" placeholder="Your Name" required />
+        <input type="text" id="address" placeholder="Shipping Address" required />
+        <input type="tel" id="phone" placeholder="Phone Number" required />
+        <input type="email" id="email" placeholder="Email" required />
+
+        <label>
+          <input type="checkbox" id="faceID" onchange="handleFaceID()" />
+          Use Face ID for instant checkout
+        </label><br><br>
+
+        <video id="camera" autoplay muted></video>
+        <div id="faceStatus">✅ Face Verified</div>
+
+        <input type="text" id="upi" placeholder="Enter UPI ID or Card Last 4 Digits" required />
+
+        <button type="submit">Pay & Order</button>
+        <div id="confirmation">✅ Payment successful & order placed!</div>
+        <button type="button" class="close-btn" onclick="closeModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let selectedItem = '';
+let stream = null;
+let faceVerified = false;
+
+function generateRefID() {
+  return 'FCE' + Math.floor(1000 + Math.random() * 9000);
+}
+
+async function loadModels() {
+  await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models');
+  console.log("✅ Face API models loaded");
+}
+
+
+
+async function handleFaceID() {
+  const useFaceID = document.getElementById("faceID").checked;
+  const camera = document.getElementById("camera");
+  const faceStatus = document.getElementById("faceStatus");
+  const upiInput = document.getElementById("upi");
+
+  if (useFaceID) {
+    faceVerified = false;
+    upiInput.disabled = true;
+    camera.style.display = "block";
+    faceStatus.style.display = "block";
+    faceStatus.textContent = "🔍 Scanning your face...";
+
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    camera.srcObject = stream;
+
+    const interval = setInterval(async () => {
+      const detections = await faceapi.detectAllFaces(camera, new faceapi.TinyFaceDetectorOptions());
+      if (detections.length > 0) {
+        faceVerified = true;
+        faceStatus.textContent = "✅ Face matched";
+        clearInterval(interval);
+      }
+    }, 1500);
+  } else {
+    upiInput.disabled = false;
+    camera.style.display = "none";
+    faceStatus.style.display = "none";
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    faceVerified = false;
+  }
+}
+
+function openModal(itemName, price) {
+  selectedItem = `${itemName} – ₹${price}`;
+  document.getElementById("selectedItem").textContent = `Item: ${selectedItem}`;
+  document.getElementById("orderModal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("orderModal").style.display = "none";
+  document.getElementById("confirmation").style.display = "none";
+  document.querySelector("#orderModal form").reset();
+  document.getElementById("camera").style.display = "none";
+  document.getElementById("faceStatus").style.display = "none";
+  document.getElementById("upi").disabled = false;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+}
+
+function submitOrder(e) {
+  e.preventDefault();
+  const name = document.getElementById("name").value;
+  const upi = document.getElementById("upi").value;
+  const faceID = document.getElementById("faceID").checked;
+
+  if (faceID && !faceVerified) {
+    alert("Face ID not verified. Please wait...");
+    return;
+  }
+
+  const refID = generateRefID();
+  const method = faceID ? "Face ID" : "UPI/Card";
+  const amt = selectedItem.match(/₹\d+/)[0];
+  const msg = `${amt} debited via ${method} (Ref: ${refID})\n\nPayment Successful.\nThank you, ${name}!`;
+
+  document.getElementById("confirmation").style.display = "block";
+
+  setTimeout(() => {
+    alert(msg);
+    closeModal();
+  }, 1200);
+}
+
+window.onload = loadModels;
+
+window.onclick = function(e) {
+  const modal = document.getElementById('orderModal');
+  if (e.target === modal) closeModal();
+};
+
+  </script>
+
+</body>
+</html>
+
+voice-nav.js
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("❌ Your browser does not support Speech Recognition!");
+    console.error("Speech Recognition API not supported.");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.continuous = false;
+
+  const button = document.getElementById("voice-nav-btn");
+  const status = document.getElementById("voice-status");
+
+  if (button && status) {
+    button.addEventListener('click', () => {
+      try {
+        recognition.start();
+        button.innerText = '🎧 Listening...';
+        status.innerText = "🎤 Listening for navigation commands...";
+        console.log("🎤 Voice recognition started.");
+      } catch (error) {
+        console.error("❌ Failed to start recognition:", error);
+        status.innerText = "❌ Error starting voice recognition.";
+        button.innerText = "🎤 Start Voice Command";
+      }
+    });
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.toLowerCase().trim();
+      console.log("🗣️ Voice Command:", transcript);
+      status.innerText = `✅ Heard: "${transcript}"`;
+
+      if (transcript.includes("home")) {
+        console.log("Redirecting to Home...");
+        window.location.href = "index.html";
+      } else if (transcript.includes("product")) {
+        console.log("Redirecting to Product...");
+        window.location.href = "product.html";
+      } else if (transcript.includes("inspiration")) {
+        console.log("Scrolling to Inspiration Section...");
+        window.scrollTo({ top: 800, behavior: 'smooth' });
+      } else if (transcript.includes("account")) {
+        console.log("Redirecting to Account...");
+        window.location.href = "account.html";
+      } else if (transcript.includes("cart")) {
+        console.log("Redirecting to Cart...");
+        window.location.href = "cart.html";
+      } else {
+        console.warn(`❌ Unrecognized command: "${transcript}"`);
+        status.innerText = `❌ Unrecognized command: "${transcript}"`;
+      }
+    };
+
+    recognition.onend = () => {
+      console.log("🎤 Voice recognition ended.");
+      button.innerText = "🎤 Start Voice Command";
+    };
+
+    recognition.onerror = (event) => {
+      console.error(`❌ Error occurred in recognition: ${event.error}`);
+      status.innerText = `❌ Voice error: ${event.error}`;
+      button.innerText = "🎤 Start Voice Command";
+    };
+  } else {
+    console.error("❌ Button or status element not found.");
+  }
+});
+

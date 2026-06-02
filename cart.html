@@ -1,274 +1,322 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
-        integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
-        crossorigin="anonymous" />
-    <link rel="stylesheet" href="css/utility.css">
-    <link rel="stylesheet" href="css/style.css">
-    <title>Products-FStore</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cart - FashionStore</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
+  <script src="js/voice-nav.js"></script>
+
+
+  <style>
+    :root {
+      --primary: #8e44ad;
+      --bg-light: #f9f8fc;
+      --text-dark: #333;
+      --card: #fff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', 'Urbanist', sans-serif;
+      background: var(--bg-light);
+      margin: 0;
+      padding: 0;
+      color: var(--text-dark);
+    }
+
+    .header {
+      background-color: var(--primary);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-weight: 600;
+      font-size: 2rem;
+    }
+
+    .cart {
+      width: 90%;
+      max-width: 1000px;
+      margin: 40px auto;
+      background: var(--card);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #f3e9fa;
+      font-weight: 600;
+    }
+
+    .cart-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .cart-info img {
+      width: 80px;
+      border-radius: 10px;
+    }
+
+    input[type="number"] {
+      width: 60px;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .remove-btn {
+      color: #e74c3c;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 5px;
+      display: inline-block;
+    }
+
+    .remove-btn:hover {
+      text-decoration: underline;
+    }
+
+    .total-price {
+      margin-top: 30px;
+      text-align: right;
+      font-size: 1.1rem;
+    }
+
+    .total-price table {
+      width: 100%;
+      max-width: 300px;
+      margin-left: auto;
+      background-color: #faf4ff;
+      border: 1px solid #e1ccee;
+      border-radius: 8px;
+    }
+
+    .total-price td {
+      padding: 10px 14px;
+      font-weight: 600;
+    }
+
+    .total-price td:last-child {
+      text-align: right;
+      font-size: 1.15rem;
+      color: #2c3e50;
+    }
+
+    /* Spin Section */
+    .spin-section {
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(to right, #fceaff, #e8d8ff);
+      margin: 50px auto;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .spin-section h2 {
+      color: var(--primary);
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .spin-section p {
+      font-size: 1.1rem;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    #spinBtn {
+      padding: 14px 30px;
+      font-size: 1.2rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #spinBtn:hover {
+      background-color: #732d91;
+    }
+
+    @media (max-width: 768px) {
+      .cart {
+        padding: 20px;
+      }
+
+      .cart-info {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .total-price table {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
-<!-- header -->
-
 <body>
-    <!-- Header -->
-    <header id="home" class="header s-pro">
 
-        <div id="navbar" class="navbar top">
-            <div class="logo">
-                <h1><a href="index.html"><i class="fab fa-foursquare mob"></i></a><span class="mobs">FashionStore</span>
-                </h1>
+  <div class="header">
+    <h1><i class="fab fa-foursquare"></i> FashionStore - Cart</h1>
+  </div>
+
+  <div class="box cart">
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+      <tbody id="cart-body">
+        <tr>
+          <td>
+            <div class="cart-info">
+              <img src="images/products/chanel.jpg" alt="">
+              <div>
+                <p>Chanel Perfume</p>
+                <small class="price">Price: ₹1350.00</small><br>
+                <span class="remove-btn">Remove</span>
+              </div>
             </div>
-            <nav>
-                <button class="hamburger" id="hamburger">
-                    <i class="fas fa-bars"></i>
-                </button>
-
-                <ul class="nav-ul" id="nav-ul">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="product.html">Product</a></li>
-                    <li><a href="inspire.html">Inspiration</a></li>
-                    <li><a href="account.html">Account</a></li>
-                    <li><a href="cart.html" class="icon"><i class="fas fa-shopping-cart"></i></a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-
-    <!-- 💡 Stylish Visual Search Section -->
-<section class="visual-search-section">
-  <div class="vs-container">
-    <h2 class="vs-title">👗 Try Visual Search</h2>
-    <p class="vs-subtitle">Upload an outfit to discover similar styles in our collection</p>
-    
-    <label class="vs-upload-btn">
-      Upload Outfit
-      <input type="file" id="upload" accept="image/*" hidden />
-    </label>
-
-    <br />
-    <img id="user-image" class="vs-preview" hidden />
-    <div id="results" class="vs-results"></div>
-  </div>
-</section>
-
-    <!-- CART -->
-    <div class="box cart">
-        <table>
-            <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Subtotal</th>
-            </tr>
-            <tr>
-                <td>
-                    <div class="cart-info">
-                        <img src="images/products/chanel.jpg" alt="">
-                        <div>
-                            <p>Chanel Perfume</p>
-                            <small> price: &#x20B9 1350.00 </small>
-                            <br> <a href="#">Remove</a>
-                        </div>
-                    </div>
-                </td>
-                <td><input type="number" value="1"></td>
-                <td>&#x20B9 1350.00 </td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="cart-info">
-                        <img src="images/products/gabbana.jpg" alt="">
-                        <div>
-                            <p>Gabbana Perfume</p>
-                            <small> price: &#x20B9 1890.99 </small>
-                            <br> <a href="#">Remove</a>
-                        </div>
-                    </div>
-                </td>
-                <td><input type="number" value="1"></td>
-                <td>&#x20B9 1890.99 </td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="cart-info">
-                        <img src="images/products/jordan.jpg" alt="">
-                        <div>
-                            <p>Jordan air-2
-                            </p>
-                            <small> price: &#x20B9 6299.00 </small>
-                            <br> <a href="#">Remove</a>
-                        </div>
-                    </div>
-                </td>
-                <td><input type="number" value="1"></td>
-                <td>&#x20B9 6299.00 </td>
-            </tr>
-        </table>
-
-
-        <div class="total-price">
-            <table>
-                <tr>
-                    <td>Subtotal</td>
-                    <td>&#x20B9 9539.99 </td>
-                </tr>
-                <tr>
-                    <td>Tax</td>
-                    <td>&#x20B9 49.95 </td>
-                </tr>
-                <tr>
-                    <td>Total</td>
-                    <td>&#x20B9 9589.94 </td>
-                </tr>
-            </table>
-        </div>
-
-    </div>
-
-
- 
-
-<!-- TensorFlow JS -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
-<script src="js/visual-search.js"></script>
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="footer-left">
-            <img src="images/logo.jpeg" alt="">
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing.</p>
-            <div class="social">
-                <a href="#"><i class="fab fa-facebook fa-2x"></i></a>
-                <a href="#"><i class="fab fa-twitter fa-2x"></i></a>
-                <a href="#"><i class="fab fa-youtube fa-2x"></i></a>
-                <a href="#"><i class="fab fa-linkedin fa-2x"></i></a>
+          </td>
+          <td><input type="number" class="quantity-input" value="1"></td>
+          <td class="subtotal">₹1350.00</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="cart-info">
+              <img src="images/products/gabbana.jpg" alt="">
+              <div>
+                <p>Gabbana Perfume</p>
+                <small class="price">Price: ₹1890.99</small><br>
+                <span class="remove-btn">Remove</span>
+              </div>
             </div>
-        </div>
+          </td>
+          <td><input type="number" class="quantity-input" value="1"></td>
+          <td class="subtotal">₹1890.99</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="cart-info">
+              <img src="images/products/jordan.jpg" alt="">
+              <div>
+                <p>Jordan Air-2</p>
+                <small class="price">Price: ₹6299.00</small><br>
+                <span class="remove-btn">Remove</span>
+              </div>
+            </div>
+          </td>
+          <td><input type="number" class="quantity-input" value="1"></td>
+          <td class="subtotal">₹6299.00</td>
+        </tr>
+      </tbody>
+    </table>
 
-        <ul class="footer-right">
-            <li>
-                <h3>Useful links</h3>
-
-                <ul class="box">
-                    <li><a href="#">Coupon</a></li>
-                    <li><a href="#">Join policy</a></li>
-                    <li><a href="#">Blog post</a></li>
-                    <li><a href="#">Inspiration</a></li>
-                    <li><a href="#">Account</a></li>
-                </ul>
-            </li>
-            <li class="feature">
-                <h3>Products</h3>
-
-                <ul class="box">
-                    <li><a href="#">Shoes</a></li>
-                    <li><a href="#">Shirts</a></li>
-                    <li><a href="#">Bag pack</a></li>
-                    <li><a href="#">Eyewear</a></li>
-                    <li><a href="#">Womens</a></li>
-                </ul>
-            </li>
-
-            <li>
-                <h3>Address</h3>
-
-                <ul class="box">
-                    <li><a href="#">123,Cyber City</a></li>
-                    <li><a href="#">Sector 12</a></li>
-                    <li><a href="#">Gurugram, Haryana</a></li>
-                    <li><a href="#">112353</a></li>
-                </ul>
-            </li>
-        </ul>
-
-        <div class="footer-bottom">
-            <p>All right reserved &copy; FashionStore 2020</p>
-        </div>
-    </footer>
-
-
-    </section>
-
-
-
-
-
-    <script src="https://code.jquery.com/jquery-3.5.0.min.js"
-        integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
-    <script src="js/index.js"></script>
-
-    <!-- AI Size Estimator Floating Button -->
-<div id="estimator-float-btn">
-  <button id="size-estimator-btn" title="Estimate My Size">📏</button>
-</div>
-
-
-
-
-    <!-- Chatbot Toggle Button -->
-<div id="chatbot-container">
-  <!-- 💬 This is the chatbot icon toggle button -->
-  <button id="chatbot-toggle" title="Open Chatbot">💬</button>
-
-  <!-- Chatbox -->
-  <div id="chatbox" class="hidden">
-    <div id="chat-header">Your AI Assistant <span id="close-chat">×</span></div>
-     
-    <div id="chat-messages"></div>
-    
-    <div id="chat-input-wrapper">
-        <div id="chat-status" style="display: none;">🎤 Listening...</div>
-      <input type="text" id="user-input" placeholder="Type a message..." />
-      <button id="mic-button" title="Speak">🎤</button>
+    <div class="total-price">
+      <table>
+        <tr>
+          <td>Total</td>
+          <td id="total">₹0.00</td>
+        </tr>
+      </table>
     </div>
   </div>
-</div>
-<!-- AI Size Estimator Modal -->
-<div id="size-estimator-modal">
-  <div class="estimator-modal-box wide">
-    <h3>👗 Estimate Your Perfect Fit</h3>
-    <p class="subtext">Get AI size suggestions tailored to you</p>
 
-    <div class="estimator-form-row">
-      <div class="form-group">
-        <label for="height">📏 Height (cm)<small>(optional)</small></label>
-        <input type="number" id="height" placeholder="e.g. 165" />
-      </div>
+  <section id="spin-section" class="spin-section">
+    <h2>🎁 Win Exciting Offers and Gifts!</h2>
+    <p>Spin the wheel and unlock amazing rewards. Use them on your next purchase!</p>
+    <a href="spin-wheel-game.html" id="spinBtnLink">
+      <button id="spinBtn">🎯 SPIN</button>
+    </a>
+  </section>
 
-      <div class="form-group">
-        <label for="weight">⚖️ Weight (kg)<small>(optional)</small></label>
-        <input type="number" id="weight" placeholder="e.g. 60" />
-      </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const cartBody = document.getElementById("cart-body");
+      const totalDisplay = document.getElementById("total");
+      const spinBtnLink = document.getElementById("spinBtnLink");
+      const MIN_SPIN_AMOUNT = 10000;
 
-      <div class="form-group">
-        <label for="gender">🧍 Gender</label>
-        <select id="gender">
-          <option value="">Select</option>
-          <option value="male">👨 Male</option>
-          <option value="female">👩 Female</option>
-        </select>
-      </div>
-    </div>
+      function parsePrice(text) {
+        return parseFloat(text.replace(/[^\d.]/g, "")) || 0;
+      }
 
-    <div class="form-group full">
-      <label for="photo">📸 Upload a Photo<span style="color: red;">*</span></label>
-      <input type="file" id="photo" accept="image/*" required/>
-    </div>
+      function formatPrice(num) {
+        return "₹" + num.toFixed(2);
+      }
 
-    <button id="submit-estimate">🎯 Get My Size</button>
-    <div id="size-result"></div>
-    <button id="close-estimator" class="close-btn">❌ Close</button>
-    <canvas id="preview-canvas" style="display: none;"></canvas>
-    <!-- Animated Loader (hidden by default) -->
-<div id="loader" style="display: none; font-size: 1.2rem; text-align: center;">
-  <span class="emoji-loader">⏳</span> Processing your image...
-</div>
-  </div>
-</div>
+      function updateCartTotals() {
+        let total = 0;
+        document.querySelectorAll("#cart-body tr").forEach(row => {
+          const priceText = row.querySelector(".price").textContent;
+          const price = parsePrice(priceText);
+          const quantity = parseInt(row.querySelector(".quantity-input").value) || 1;
+          const subtotal = price * quantity;
+          row.querySelector(".subtotal").textContent = formatPrice(subtotal);
+          total += subtotal;
+        });
+        totalDisplay.textContent = formatPrice(total);
+      }
+
+      // Quantity change
+      cartBody.addEventListener("input", (e) => {
+        if (e.target.classList.contains("quantity-input")) {
+          updateCartTotals();
+        }
+      });
+
+      // Remove item
+      cartBody.addEventListener("click", (e) => {
+        if (e.target.classList.contains("remove-btn")) {
+          const row = e.target.closest("tr");
+          row.remove();
+          updateCartTotals();
+        }
+      });
+
+      // Spin access control
+      spinBtnLink.addEventListener("click", (e) => {
+        const total = parsePrice(totalDisplay.textContent);
+        if (total < MIN_SPIN_AMOUNT) {
+          e.preventDefault();
+          alert(`🛑 You need to shop for at least ₹${MIN_SPIN_AMOUNT} to spin the wheel!`);
+        }
+      });
+
+      updateCartTotals();
+    });
+  </script>
 
 </body>
-
 </html>

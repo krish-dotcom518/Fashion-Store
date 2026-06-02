@@ -758,12 +758,21 @@ form a {
   animation: rotateEmoji 0.6s infinite alternate ease-in-out;
 }
 .visual-search-section {
-  width: 100vw; /* Full screen width */
   padding: 60px 0;
-  background: linear-gradient(135deg, #ffe4ec, #e8f0ff);
   text-align: center;
-  overflow-x: hidden;
+  background: #ffffff; /* optional: remove if you want a gradient page */
 }
+
+.vs-card {
+  background: linear-gradient(135deg, #ffe4ec, #e8f0ff);
+  width: 90%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
 
 .vs-container {
   width: 100%;       /* Take full width */
@@ -792,12 +801,14 @@ form a {
   border-radius: 30px;
   cursor: pointer;
   font-weight: bold;
-  transition: 0.3s ease;
+  transition: transform 0.2s ease, background-color 0.3s ease;
 }
 
 .vs-upload-btn:hover {
-  background: #e5375f;
+  background: #d52b5a;
+  transform: scale(1.05);
 }
+
 
 .vs-preview {
   margin-top: 20px;
@@ -841,4 +852,330 @@ form a {
 .vs-results p {
   font-size: 13px;
   color: #888;
+}
+.wheel-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.wheel-pointer {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 20px solid red;
+  z-index: 2;
+}
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.geo-bubble {
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  margin: 30px 0;
+}
+.bubble-card {
+  background: white;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 0 6px #ddd;
+}
+.geo-entry-section {
+  background: linear-gradient(135deg, #ffe4ec, #e8f0ff);  /* same as visual search */
+  padding: 60px 20px;
+  text-align: center;
+  border-radius: 20px;
+  margin: 50px auto;
+  width: 90%;
+  max-width: 900px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+.geo-entry-section h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #243a6f; /* Deep blue to match theme */
+  margin-bottom: 20px;
+}
+
+.geo-entry-section p {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 25px;
+}
+
+.geo-btn {
+  display: inline-flex;
+  align-items: center;
+  background: #243a6f;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.geo-btn img {
+  width: 26px;
+  margin-right: 12px;
+}
+
+.geo-btn:hover {
+  background-color: #1a2e56;
+  transform: scale(1.05);
+}
+
+
+.spin-section {
+  background: linear-gradient(135deg, #ffe4ec, #e8f0ff);
+  padding: 60px 20px;
+  text-align: center;
+  border-radius: 20px;
+  margin: 50px auto;
+  width: 90%;
+  max-width: 800px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.spin-section h2 {
+  font-size: 2.4rem;
+  color: #8e44ad;
+  margin-bottom: 15px;
+}
+
+.spin-section p {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 25px;
+}
+
+#spinBtn {
+  background-color: #8e44ad;
+  color: white;
+  padding: 16px 30px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s;
+}
+
+#spinBtn:hover {
+  background-color: #6d2c91;
+  transform: scale(1.05);
+}
+.voice-nav-section {
+  padding: 60px 20px;
+  background-color: #ffffff; /* base page bg */
+  text-align: center;
+}
+
+.voice-card {
+  background: linear-gradient(135deg, #ffe4ec, #e8f0ff); /* same as Visual Search and Geo */
+  width: 90%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+.voice-card h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #243a6f;
+  margin-bottom: 15px;
+}
+
+.voice-card p {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+#voice-nav-btn {
+  background-color: #243a6f;
+  color: #fff;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+  font-weight: 600;
+}
+
+#voice-nav-btn:hover {
+  background-color: #1a2e56;
+  transform: scale(1.05);
+}
+
+
+#voice-status {
+  color: #444;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+.feature-section-row {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  padding: 60px 20px;
+  gap: 30px;
+  background-color: #ffffff;
+}
+
+.vs-card{
+  flex: 1 1 300px;
+  max-width: 350px;
+  background: linear-gradient(135deg, #ffe4ec, #e8f0ff);
+  padding: 30px 20px;
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  margin-bottom: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.vs-card:hover,
+.geo-card:hover,
+.voice-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.15);
+}
+
+
+.vs-card h2,
+.geo-card h2,
+.voice-card h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #243a6f;
+  margin-bottom: 15px;
+}
+
+.vs-card p,
+.geo-card p,
+.voice-card p {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+/* Upload Button */
+.vs-upload-btn {
+  display: inline-block;
+  background: #ff3e6c;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s ease;
+}
+
+.vs-upload-btn:hover {
+  background: #e5375f;
+}
+
+/* Geo Button */
+.geo-btn {
+  display: inline-flex;
+  align-items: center;
+  background: #243a6f;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.geo-btn img {
+  width: 26px;
+  margin-right: 12px;
+}
+
+.geo-btn:hover {
+  background-color: #1a2e56;
+  transform: scale(1.05);
+}
+
+/* Voice Nav Button */
+#voice-nav-btn {
+  background-color: #243a6f;
+  color: #fff;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-weight: 600;
+}
+
+#voice-nav-btn:hover {
+  background-color: #1a2e56;
+}
+.gradient-section {
+  background: linear-gradient(135deg, #ffe6f0, #e6f0ff);
+  padding: 80px 20px;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 30px;
+  text-align: center;
+}
+.explore-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
+  padding: 30px;
+}
+
+.geo-card, .voice-card {
+  background: linear-gradient(135deg, #ffe6f0, #e6f0ff);
+  padding: 25px 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  max-width: 350px;
+  width: 100%;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.geo-card:hover, .voice-card:hover {
+  transform: translateY(-5px);
+}
+.card-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+  flex-wrap: wrap;
+  padding: 30px;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
 }
